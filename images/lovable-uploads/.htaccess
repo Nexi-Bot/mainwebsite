@@ -79,14 +79,6 @@ Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
 # Error pages
-ErrorDocument 400 /error.php?code=400
-ErrorDocument 401 /401.php
-ErrorDocument 403 /403.php
 ErrorDocument 404 /404.php
-ErrorDocument 405 /error.php?code=405
-ErrorDocument 408 /error.php?code=408
-ErrorDocument 429 /error.php?code=429
-ErrorDocument 500 /500.php
-ErrorDocument 502 /502.php
-ErrorDocument 503 /503.php
-ErrorDocument 504 /error.php?code=504
+ErrorDocument 403 /404.php
+ErrorDocument 500 /404.php

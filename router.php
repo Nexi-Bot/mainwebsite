@@ -27,6 +27,27 @@ switch($path) {
     case 'coming-soon':
         include 'coming-soon.php';
         break;
+    case '401':
+        include '401.php';
+        break;
+    case '403':
+        include '403.php';
+        break;
+    case '404':
+        include '404.php';
+        break;
+    case '500':
+        include '500.php';
+        break;
+    case '502':
+        include '502.php';
+        break;
+    case '503':
+        include '503.php';
+        break;
+    case 'error':
+        include 'error.php';
+        break;
     default:
         // Check if it's a file that exists
         if (file_exists($path)) {
