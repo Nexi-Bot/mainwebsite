@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? $page_title . ' - ' . SITE_NAME : SITE_NAME; ?></title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <!-- Favicon declarations -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=<?php echo time(); ?>">
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=<?php echo time(); ?>">
+    <link rel="apple-touch-icon" href="/favicon.ico?v=<?php echo time(); ?>">
+    <meta name="msapplication-TileImage" content="/favicon.ico?v=<?php echo time(); ?>">>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
