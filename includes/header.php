@@ -8,7 +8,7 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=<?php echo time(); ?>">
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=<?php echo time(); ?>">
     <link rel="apple-touch-icon" href="/favicon.ico?v=<?php echo time(); ?>">
-    <meta name="msapplication-TileImage" content="/favicon.ico?v=<?php echo time(); ?>">>
+    <meta name="msapplication-TileImage" content="/favicon.ico?v=<?php echo time(); ?>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -46,7 +46,7 @@
                 <div class="flex-shrink-0">
                     <a href="/home" class="flex items-center bg-black px-4 py-2 rounded">
                         <img 
-                            src="images/lovable-uploads/e76a24f5-4bd9-4d5d-8f70-e1940b40a17c.png" 
+                            src="/images/lovable-uploads/e76a24f5-4bd9-4d5d-8f70-e1940b40a17c.png" 
                             alt="Nexi" 
                             class="h-16 w-auto"
                         />

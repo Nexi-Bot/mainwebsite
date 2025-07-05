@@ -5,7 +5,7 @@
                 <div class="md:col-span-2">
                     <div class="flex items-center mb-4">
                         <img 
-                            src="images/lovable-uploads/e76a24f5-4bd9-4d5d-8f70-e1940b40a17c.png" 
+                            src="/images/lovable-uploads/e76a24f5-4bd9-4d5d-8f70-e1940b40a17c.png" 
                             alt="Nexi" 
                             class="h-12 w-auto"
                         />
