@@ -1,9 +1,22 @@
 RewriteEngine On
 
-# Redirect to index.php if the file doesn't exist
+# Redirect /index.php to /home
+RewriteCond %{THE_REQUEST} /index\.php[\s?] [NC]
+RewriteRule ^index\.php$ /home [R=301,L]
+
+# Route /home to index.php internally
+RewriteRule ^home/?$ index.php [L]
+
+# Remove .php extension from URLs
+RewriteCond %{THE_REQUEST} /([^.]+)\.php[\s?] [NC]
+RewriteRule ^([^.]+)\.php$ /$1 [R=301,L]
+
+# Add .php extension internally if file exists
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^([^.]+)$ $1.php [NC,L]
+RewriteCond %{REQUEST_URI} !^/home/?$
+RewriteCond %{DOCUMENT_ROOT}/$1.php -f
+RewriteRule ^([^.]+)/?$ $1.php [L]
 
 # Security headers
 Header always set X-Frame-Options DENY
@@ -55,6 +68,6 @@ Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
 # Error pages
-ErrorDocument 404 /index.php
-ErrorDocument 403 /index.php
-ErrorDocument 500 /index.php
+ErrorDocument 404 /404.php
+ErrorDocument 403 /404.php
+ErrorDocument 500 /404.php

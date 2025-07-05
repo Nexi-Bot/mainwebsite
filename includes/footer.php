@@ -32,7 +32,7 @@
                         <?php foreach ($nav_items as $page => $name): ?>
                             <li>
                                 <a 
-                                    href="<?php echo $page; ?>.php"
+                                    href="/<?php echo $page; ?>"
                                     class="text-gray-400 hover:text-orange-400 transition-colors duration-200"
                                 >
                                     <?php echo $name; ?>
@@ -49,11 +49,12 @@
                         <?php foreach ($external_links as $link): ?>
                             <?php
                             $is_external = strpos($link['url'], 'http') === 0;
+                            $href = $is_external ? $link['url'] : '/' . $link['url'];
                             $target = $is_external ? 'target="_blank" rel="noopener noreferrer"' : '';
                             ?>
                             <li>
                                 <a 
-                                    href="<?php echo $link['url']; ?>"
+                                    href="<?php echo $href; ?>"
                                     <?php echo $target; ?>
                                     class="text-gray-400 hover:text-orange-400 transition-colors duration-200 flex items-center gap-1"
                                 >
@@ -85,10 +86,10 @@
                     © <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>. All rights reserved.
                 </p>
                 <div class="flex space-x-6 mt-4 md:mt-0">
-                    <a href="legal.php" class="text-gray-400 hover:text-orange-400 text-sm transition-colors duration-200">
+                    <a href="/legal" class="text-gray-400 hover:text-orange-400 text-sm transition-colors duration-200">
                         Privacy Policy
                     </a>
-                    <a href="legal.php" class="text-gray-400 hover:text-orange-400 text-sm transition-colors duration-200">
+                    <a href="/legal" class="text-gray-400 hover:text-orange-400 text-sm transition-colors duration-200">
                         Terms of Service
                     </a>
                 </div>

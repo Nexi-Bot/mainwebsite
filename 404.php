@@ -16,7 +16,7 @@ include 'includes/header.php';
         
         <div class="space-y-4">
             <a
-                href="index.php"
+                href="/home"
                 class="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 inline-flex items-center gap-2"
             >
                 <i data-lucide="home" class="w-5 h-5"></i>
@@ -28,7 +28,7 @@ include 'includes/header.php';
                 <div class="flex flex-wrap justify-center gap-2">
                     <?php foreach ($nav_items as $page => $name): ?>
                         <a
-                            href="<?php echo $page; ?>.php"
+                            href="/<?php echo $page; ?>"
                             class="text-orange-400 hover:text-orange-300 px-3 py-1 rounded transition-colors duration-200"
                         >
                             <?php echo $name; ?>

@@ -43,7 +43,7 @@
             <div class="flex justify-between items-center h-20">
                 <!-- Logo -->
                 <div class="flex-shrink-0">
-                    <a href="index.php" class="flex items-center bg-black px-4 py-2 rounded">
+                    <a href="/home" class="flex items-center bg-black px-4 py-2 rounded">
                         <img 
                             src="images/lovable-uploads/e76a24f5-4bd9-4d5d-8f70-e1940b40a17c.png" 
                             alt="Nexi" 
@@ -57,7 +57,7 @@
                     <div class="ml-10 flex items-baseline space-x-4">
                         <?php foreach ($nav_items as $page => $name): ?>
                             <a
-                                href="<?php echo $page; ?>.php"
+                                href="/<?php echo $page; ?>"
                                 class="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 <?php echo ($current_page === $page) ? 'bg-orange-600 text-white' : 'text-white hover:bg-orange-500/20 hover:text-orange-400'; ?>"
                             >
                                 <?php echo $name; ?>
@@ -68,10 +68,11 @@
                         <?php foreach ($external_links as $link): ?>
                             <?php
                             $is_external = strpos($link['url'], 'http') === 0;
+                            $href = $is_external ? $link['url'] : '/' . $link['url'];
                             $target = $is_external ? 'target="_blank" rel="noopener noreferrer"' : '';
                             ?>
                             <a
-                                href="<?php echo $link['url']; ?>"
+                                href="<?php echo $href; ?>"
                                 <?php echo $target; ?>
                                 class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-orange-500/20 hover:text-orange-400 transition-colors duration-200 flex items-center gap-1"
                             >
@@ -103,7 +104,7 @@
                 <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-black border-t border-orange-500/20">
                     <?php foreach ($nav_items as $page => $name): ?>
                         <a
-                            href="<?php echo $page; ?>.php"
+                            href="/<?php echo $page; ?>"
                             class="block px-3 py-2 rounded-md text-base font-medium <?php echo ($current_page === $page) ? 'bg-orange-600 text-white' : 'text-white hover:bg-orange-500/20 hover:text-orange-400'; ?>"
                         >
                             <?php echo $name; ?>
@@ -114,10 +115,11 @@
                     <?php foreach ($external_links as $link): ?>
                         <?php
                         $is_external = strpos($link['url'], 'http') === 0;
+                        $href = $is_external ? $link['url'] : '/' . $link['url'];
                         $target = $is_external ? 'target="_blank" rel="noopener noreferrer"' : '';
                         ?>
                         <a
-                            href="<?php echo $link['url']; ?>"
+                            href="<?php echo $href; ?>"
                             <?php echo $target; ?>
                             class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-orange-500/20 hover:text-orange-400 flex items-center gap-2"
                         >

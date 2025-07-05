@@ -9,20 +9,24 @@ define('WEBHOOK_URL', 'https://discord.com/api/webhooks/1389607927983116370/GlPR
 
 // Get current page for navigation
 $current_page = basename($_SERVER['PHP_SELF'], '.php');
+// Handle the special case where index.php should be treated as 'home'
+if ($current_page === 'index') {
+    $current_page = 'home';
+}
 
-// Navigation items
+// Navigation items (using clean URLs)
 $nav_items = [
-    'index' => 'Home',
+    'home' => 'Home',
     'features' => 'Features',
     'careers' => 'Careers',
     'team' => 'Meet the Team',
     'legal' => 'Legal'
 ];
 
-// External links
+// External links (using clean URLs for internal pages)
 $external_links = [
-    ['name' => 'Dashboard', 'url' => 'coming-soon.php'],
-    ['name' => 'Documentation', 'url' => 'coming-soon.php'],
+    ['name' => 'Dashboard', 'url' => 'coming-soon'],
+    ['name' => 'Documentation', 'url' => 'coming-soon'],
     ['name' => 'Status', 'url' => 'https://status.nexibot.uk']
 ];
 
