@@ -1,4 +1,9 @@
 <?php
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Site configuration
 define('SITE_NAME', 'Nexi');
 define('SITE_URL', 'https://your-domain.com');
@@ -6,6 +11,26 @@ define('DISCORD_INVITE', 'https://discord.com/invite/nexibot');
 define('DASHBOARD_URL', 'https://billing.stripe.com/p/login/14keYK0nd3sk2SA144');
 define('DOCUMENTATION_URL', 'https://documentation.nexibot.uk/');
 define('WEBHOOK_URL', 'https://discord.com/api/webhooks/1389607927983116370/GlPRFlYzMZLTgiF9eANM5QeGZ1PqP8_mB9XUk7kybxnEzht9oo5FsgIyMyRwwCkx6Vzl');
+
+// Database configuration
+define('DB_HOST', '65.21.61.192');
+define('DB_PORT', '3306');
+define('DB_USER', 'u25473_Y8CkMsMHyp');
+define('DB_PASS', 'rlALotgMWdSy^8flYbx0PYS@');
+define('DB_NAME', 's25473_NexiBotDatabase');
+
+// Stripe configuration
+define('STRIPE_PUBLISHABLE_KEY', 'pk_live_51RgSvsHxd4KTYsDdodmX55cZkcaGwzXGgARw7yvfH4d8iZhUKUiKT7MGHyboIsnoAZkmsSovqrpJh2ajldqcc7te00gdwtNGiB');
+define('STRIPE_SECRET_KEY', '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');
+
+// Discord OAuth configuration
+define('DISCORD_CLIENT_ID', 'YOUR_DISCORD_CLIENT_ID'); // You'll need to provide this from Discord Developer Portal
+define('DISCORD_CLIENT_SECRET', 'YOUR_DISCORD_CLIENT_SECRET'); // You'll need to provide this from Discord Developer Portal
+define('DISCORD_REDIRECT_URI', 'https://nexibot.uk/auth/discord-callback');
+
+// Premium pricing configuration
+define('PRESALE_END_DATE', '2025-07-20'); // When presale ends
+define('EARLY_ACCESS_DATE', '2025-07-20'); // When users get access to the bot
 
 // Get current page for navigation
 $current_page = basename($_SERVER['PHP_SELF'], '.php');

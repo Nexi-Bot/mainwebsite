@@ -2,6 +2,179 @@
 require_once 'includes/config.php';
 require_once 'includes/header.php';
 
+// Check if user is authenticated for premium purchase
+$user_authenticated = isset($_SESSION['discord_user']);
+$discord_user = $user_authenticated ? $_SESSION['discord_user'] : null;
+?>
+
+<!-- Premium Pricing Section -->
+<section class="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-black to-gray-800">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-16">
+            <div class="inline-flex items-center px-4 py-2 bg-orange-500/20 border border-orange-500/30 rounded-full text-orange-400 text-sm font-medium mb-6">
+                <i data-lucide="zap" class="w-4 h-4 mr-2"></i>
+                Early Access Presale - Limited Time
+            </div>
+            <h2 class="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
+                The Best Features at the Best Prices
+            </h2>
+            <div class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 border border-yellow-500/30 rounded-xl text-yellow-400 font-semibold text-lg mb-8">
+                <i data-lucide="star" class="w-5 h-5 mr-2"></i>
+                Nexi Premium Early Access - Available July 20th, 2025
+            </div>
+        </div>
+
+        <!-- Pricing Cards -->
+        <div class="grid md:grid-cols-3 gap-8 mb-12">
+            <!-- Monthly Plan -->
+            <div class="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 relative">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-white mb-4">Monthly</h3>
+                    <div class="mb-6">
+                        <div class="flex items-center justify-center gap-2 mb-2">
+                            <span class="text-3xl font-bold text-orange-400">£2.99</span>
+                            <span class="text-gray-400">/month</span>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            <span class="line-through">£4.99</span> first month only
+                        </div>
+                        <div class="text-sm text-green-400 font-medium">Save £2.00</div>
+                    </div>
+                    <p class="text-gray-400 mb-8">Perfect for trying premium features</p>
+                    <button 
+                        onclick="startCheckout('monthly')" 
+                        class="w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200"
+                        <?php echo !$user_authenticated ? 'disabled' : ''; ?>
+                    >
+                        <?php echo $user_authenticated ? 'Get Early Access' : 'Login Required'; ?>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Yearly Plan - Most Popular -->
+            <div class="bg-gray-900/50 border-2 border-orange-500 rounded-2xl p-8 relative">
+                <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span class="bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                        Most Popular
+                    </span>
+                </div>
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-white mb-4">Yearly</h3>
+                    <div class="mb-6">
+                        <div class="flex items-center justify-center gap-2 mb-2">
+                            <span class="text-3xl font-bold text-orange-400">£24</span>
+                            <span class="text-gray-400">/year</span>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            <span class="line-through">£35</span> first year only
+                        </div>
+                        <div class="text-sm text-green-400 font-medium">Save £11 (31%)</div>
+                    </div>
+                    <p class="text-gray-400 mb-8">Best value for long-term use</p>
+                    <button 
+                        onclick="startCheckout('yearly')" 
+                        class="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200"
+                        <?php echo !$user_authenticated ? 'disabled' : ''; ?>
+                    >
+                        <?php echo $user_authenticated ? 'Get Early Access' : 'Login Required'; ?>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lifetime Plan -->
+            <div class="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 relative">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-white mb-4">Lifetime</h3>
+                    <div class="mb-6">
+                        <div class="flex items-center justify-center gap-2 mb-2">
+                            <span class="text-3xl font-bold text-orange-400">£79</span>
+                            <span class="text-gray-400">one-time</span>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            <span class="line-through">£120</span> normal price
+                        </div>
+                        <div class="text-sm text-green-400 font-medium">Save £41 (34%)</div>
+                    </div>
+                    <p class="text-gray-400 mb-8">Pay once, use forever</p>
+                    <button 
+                        onclick="startCheckout('lifetime')" 
+                        class="w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200"
+                        <?php echo !$user_authenticated ? 'disabled' : ''; ?>
+                    >
+                        <?php echo $user_authenticated ? 'Get Early Access' : 'Login Required'; ?>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Important Notice -->
+        <div class="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-6 mb-8">
+            <div class="flex items-start gap-3">
+                <i data-lucide="alert-triangle" class="w-6 h-6 text-yellow-400 mt-1 flex-shrink-0"></i>
+                <div>
+                    <h4 class="font-semibold text-yellow-400 mb-2">Important Pricing Information</h4>
+                    <ul class="text-yellow-200 text-sm space-y-1">
+                        <li>• Early access pricing is only guaranteed for your first billing period (month/year) or lifetime purchase</li>
+                        <li>• Regular pricing applies after the initial period ends (unless you purchase lifetime access)</li>
+                        <li>• Monthly: £2.99 first month, then £4.99/month from August 20th, 2025</li>
+                        <li>• Yearly: £24 first year, then £35/year from July 20th, 2026</li>
+                        <li>• Lifetime: £79 one-time payment, never billed again</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Billing Schedule -->
+        <div class="bg-blue-900/20 border border-blue-500/30 rounded-xl p-6">
+            <div class="flex items-start gap-3">
+                <i data-lucide="calendar" class="w-6 h-6 text-blue-400 mt-1 flex-shrink-0"></i>
+                <div>
+                    <h4 class="font-semibold text-blue-400 mb-2">Billing Schedule</h4>
+                    <ul class="text-blue-200 text-sm space-y-1">
+                        <li>• <strong>Today:</strong> Pay discounted rate for early access</li>
+                        <li>• <strong>July 20th, 2025:</strong> Get access to Nexi Bot Premium features</li>
+                        <li>• <strong>Monthly:</strong> Next billing on August 20th, 2025 at regular price</li>
+                        <li>• <strong>Yearly:</strong> Next billing on July 20th, 2026 at regular price</li>
+                        <li>• <strong>Lifetime:</strong> No future billing, you own it forever</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Prompt for Non-authenticated Users -->
+        <?php if (!$user_authenticated): ?>
+        <div class="text-center mt-12">
+            <div class="bg-gray-900/50 border border-gray-700 rounded-xl p-8 max-w-md mx-auto">
+                <i data-lucide="user-check" class="w-12 h-12 text-orange-400 mx-auto mb-4"></i>
+                <h3 class="text-xl font-semibold text-white mb-4">Discord Login Required</h3>
+                <p class="text-gray-400 mb-6">Please login with Discord to purchase Nexi Premium</p>
+                <a 
+                    href="/auth/discord-login"
+                    class="inline-flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200"
+                >
+                    <i data-lucide="external-link" class="w-4 h-4"></i>
+                    Login with Discord
+                </a>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+</section>
+
+<script>
+function startCheckout(planType) {
+    <?php if ($user_authenticated): ?>
+    // Redirect to checkout page with plan type
+    window.location.href = `/premium/checkout?plan=${planType}`;
+    <?php else: ?>
+    // Redirect to Discord login
+    window.location.href = '/auth/discord-login';
+    <?php endif; ?>
+}
+</script>
+
+<?php
 $features = [
     ['name' => 'Welcome Messages', 'free' => true, 'premium' => true],
     ['name' => 'Server Stats', 'free' => true, 'premium' => true],
