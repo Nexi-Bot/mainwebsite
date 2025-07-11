@@ -16,10 +16,17 @@ RewriteCond %{THE_REQUEST} \s/+([^.\s]+)\.php[\s?] [NC]
 RewriteRule ^([^.]+)\.php$ /$1 [R=301,L]
 
 # Handle clean URLs - add .php extension internally
+# First handle auth and premium directories specifically
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(auth|premium)/([^./]+)/?$ $1/$2.php [L]
+
+# Then handle single-level paths like /features
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/home/?$
 RewriteCond %{REQUEST_URI} !^/(images|css|js)/
+RewriteCond %{REQUEST_URI} !^/(auth|premium)/
 RewriteRule ^([^./]+)/?$ $1.php [L]
 
 # Fallback - if the above doesn't work, try with DOCUMENT_ROOT

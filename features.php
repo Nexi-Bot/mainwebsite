@@ -45,7 +45,6 @@ $discord_user = $user_authenticated ? $_SESSION['discord_user'] : null;
                     <button 
                         onclick="startCheckout('monthly')" 
                         class="w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200"
-                        <?php echo !$user_authenticated ? 'disabled' : ''; ?>
                     >
                         <?php echo $user_authenticated ? 'Get Early Access' : 'Login Required'; ?>
                     </button>
@@ -75,7 +74,6 @@ $discord_user = $user_authenticated ? $_SESSION['discord_user'] : null;
                     <button 
                         onclick="startCheckout('yearly')" 
                         class="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200"
-                        <?php echo !$user_authenticated ? 'disabled' : ''; ?>
                     >
                         <?php echo $user_authenticated ? 'Get Early Access' : 'Login Required'; ?>
                     </button>
@@ -100,7 +98,6 @@ $discord_user = $user_authenticated ? $_SESSION['discord_user'] : null;
                     <button 
                         onclick="startCheckout('lifetime')" 
                         class="w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200"
-                        <?php echo !$user_authenticated ? 'disabled' : ''; ?>
                     >
                         <?php echo $user_authenticated ? 'Get Early Access' : 'Login Required'; ?>
                     </button>
