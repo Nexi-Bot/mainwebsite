@@ -1,13 +1,81 @@
-# Nexi PHP Website
+# Nexi Premium Payment System
 
-A complete PHP conversion of the original TypeScript/React Nexi website, maintaining the exact same design and functionality.
+A complete premium subscription system for Nexi Bot with Stripe payments and Discord OAuth integration.
 
-## Features
+## 🚀 Quick Start
 
-- **Exact Design Match**: Maintains the same visual design as the original React version
-- **Responsive Design**: Mobile-friendly layout using Tailwind CSS
-- **Working Contact Form**: Careers application form with Discord webhook integration
-- **SEO Optimized**: Proper meta tags, robots.txt, and clean URLs
+### Prerequisites
+- PHP 7.4+ with extensions: `pdo`, `pdo_mysql`, `curl`, `json`, `openssl`
+- MySQL/MariaDB database
+- Composer
+- Stripe account
+- Discord application
+
+### Installation
+
+1. **Clone and setup**
+   ```bash
+   git clone https://github.com/Nexi-Bot/mainwebsite.git
+   cd mainwebsite
+   composer install --no-dev --optimize-autoloader
+   ```
+
+2. **Configure environment**
+   - Update `includes/config.php` with your credentials
+   - Set up your database connection
+   - Add Stripe API keys
+   - Configure Discord OAuth
+
+3. **Initialize database**
+   ```bash
+   php init-database.php
+   ```
+
+4. **Deploy and test**
+   ```bash
+   php deploy.php
+   ```
+
+## 🔧 Configuration
+
+### Database Setup
+The system will automatically create the required tables:
+- `users` - User accounts and premium status
+- `payments` - Payment history and transactions
+
+### Stripe Configuration
+1. Get your API keys from [Stripe Dashboard](https://dashboard.stripe.com/apikeys)
+2. Set up webhook endpoint: `https://yourdomain.com/premium/webhook`
+3. Configure webhook events:
+   - `payment_intent.succeeded`
+   - `invoice.payment_succeeded` 
+   - `customer.subscription.deleted`
+
+### Discord OAuth Setup
+1. Create application at [Discord Developer Portal](https://discord.com/developers/applications)
+2. Add redirect URI: `https://yourdomain.com/auth/discord-callback`
+3. Copy Client ID and Secret to config
+
+## 💳 Features
+
+### Payment System
+- **Stripe Integration** - Secure payment processing
+- **Multiple Plans** - Monthly, Yearly, Lifetime options
+- **Coupon Support** - Discount codes and promotions
+- **Webhook Processing** - Automatic premium activation
+- **Payment History** - Complete transaction tracking
+
+### User Management
+- **Discord OAuth** - Secure authentication
+- **Premium Status** - Automatic role management
+- **Server Tracking** - Record owned Discord servers
+- **Access Control** - Presale and early access dates
+
+### Security Features
+- **Webhook Verification** - Stripe signature validation
+- **SQL Injection Protection** - PDO prepared statements
+- **XSS Protection** - Input sanitization
+- **CSRF Protection** - Session validation
 - **Security**: Protected against common vulnerabilities with proper headers
 - **Performance**: Optimized with caching headers and compression
 

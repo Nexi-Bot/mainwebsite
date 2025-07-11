@@ -16,7 +16,7 @@ try {
     $sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
     
     // You'll need to set this in your Stripe webhook settings in the Stripe Dashboard
-    $endpoint_secret = 'whsec_your_webhook_secret_here'; // Replace with your actual webhook secret from Stripe
+    $endpoint_secret = STRIPE_WEBHOOK_SECRET; // Now using config constant
 
     try {
         // Verify webhook signature

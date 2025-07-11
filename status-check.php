@@ -43,12 +43,11 @@ if (DISCORD_CLIENT_ID !== 'YOUR_DISCORD_CLIENT_ID' && DISCORD_CLIENT_SECRET !== 
 }
 
 // Check Webhook File
-$webhook_content = file_get_contents('premium/webhook.php');
-if (strpos($webhook_content, 'whsec_your_webhook_secret_here') === false) {
+if (defined('STRIPE_WEBHOOK_SECRET') && STRIPE_WEBHOOK_SECRET !== 'whsec_your_webhook_secret_here') {
     echo "✅ Webhook: Secret configured\n";
     $status['webhook'] = true;
 } else {
-    echo "⚠️  Webhook: Secret not configured (update premium/webhook.php)\n";
+    echo "⚠️  Webhook: Secret not configured (update STRIPE_WEBHOOK_SECRET in config.php)\n";
 }
 
 // Check Required Files

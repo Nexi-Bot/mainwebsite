@@ -28,6 +28,9 @@ define('DISCORD_CLIENT_ID', '1368984613804048548');
 define('DISCORD_CLIENT_SECRET', '2mE8BKAbQ4izKG8ldZuUotLvqennaLvS');
 define('DISCORD_REDIRECT_URI', 'https://nexibot.uk/auth/discord-callback');
 
+// Stripe Webhook configuration
+define('STRIPE_WEBHOOK_SECRET', 'whsec_5RD0OvxIw4YkRKxfsRPupBOFmcEddpWB');
+
 // Premium pricing configuration
 define('PRESALE_END_DATE', '2025-07-20'); // When presale ends
 define('EARLY_ACCESS_DATE', '2025-07-20'); // When users get access to the bot
