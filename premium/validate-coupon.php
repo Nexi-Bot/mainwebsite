@@ -61,16 +61,16 @@ try {
     }
 
 } catch (\Stripe\Exception\InvalidRequestException $e) {
-    // Coupon doesn't exist
+    // Coupon doesn't exist or is invalid
     echo json_encode([
         'valid' => false,
-        'error' => 'Invalid coupon code'
+        'error' => 'Invalid coupon code: ' . $e->getMessage()
     ]);
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
         'valid' => false,
-        'error' => 'Error validating coupon'
+        'error' => 'Error validating coupon: ' . $e->getMessage()
     ]);
 }
 ?>
