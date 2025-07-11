@@ -24,8 +24,8 @@ define('STRIPE_PUBLISHABLE_KEY', 'pk_live_51RgSvsHxd4KTYsDdodmX55cZkcaGwzXGgARw7
 define('STRIPE_SECRET_KEY', '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');
 
 // Discord OAuth configuration
-define('DISCORD_CLIENT_ID', 'YOUR_DISCORD_CLIENT_ID'); // You'll need to provide this from Discord Developer Portal
-define('DISCORD_CLIENT_SECRET', 'YOUR_DISCORD_CLIENT_SECRET'); // You'll need to provide this from Discord Developer Portal
+define('DISCORD_CLIENT_ID', '1368984613804048548');
+define('DISCORD_CLIENT_SECRET', '2mE8BKAbQ4izKG8ldZuUotLvqennaLvS');
 define('DISCORD_REDIRECT_URI', 'https://nexibot.uk/auth/discord-callback');
 
 // Premium pricing configuration
