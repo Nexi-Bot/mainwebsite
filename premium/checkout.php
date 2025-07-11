@@ -173,9 +173,17 @@ require_once '../includes/header.php';
                     <!-- Payment Elements -->
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-300 mb-2">Payment Information *</label>
-                        <div id="payment-element">
-                            <!-- Stripe Elements will create form elements here -->
+                        
+                        <!-- Debug info -->
+                        <div id="stripe-debug" class="mb-2 p-2 bg-blue-900/20 border border-blue-500/30 rounded text-blue-400 text-xs">
+                            Stripe Status: <span id="stripe-status">Initializing...</span>
                         </div>
+                        
+                        <div id="payment-element" class="min-h-[60px] p-4 bg-gray-800 border border-gray-700 rounded-lg">
+                            <!-- Stripe Elements will create form elements here -->
+                            <div class="text-gray-400 text-sm">Loading payment form...</div>
+                        </div>
+                        <div id="payment-element-error" class="mt-2 text-sm text-red-400"></div>
                     </div>
 
                     <!-- Legal Agreement -->
@@ -218,12 +226,73 @@ require_once '../includes/header.php';
 <!-- Stripe JS -->
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-const stripe = Stripe('<?php echo STRIPE_PUBLISHABLE_KEY; ?>');
-const elements = stripe.elements();
+console.log('Initializing Stripe...');
+document.getElementById('stripe-status').textContent = 'Loading Stripe...';
 
-// Create payment element
-const paymentElement = elements.create('payment');
-paymentElement.mount('#payment-element');
+const stripe = Stripe('<?php echo STRIPE_PUBLISHABLE_KEY; ?>');
+
+if (!stripe) {
+    console.error('Stripe failed to initialize');
+    document.getElementById('stripe-status').textContent = 'Failed to initialize!';
+    showMessage('Failed to load payment system. Please refresh the page.', 'error');
+} else {
+    document.getElementById('stripe-status').textContent = 'Stripe loaded, creating elements...';
+}
+
+console.log('Creating Stripe Elements...');
+const elements = stripe.elements({
+    appearance: {
+        theme: 'night',
+        variables: {
+            colorPrimary: '#ea580c',
+            colorBackground: '#1f2937',
+            colorText: '#ffffff',
+            colorDanger: '#ef4444',
+            fontFamily: 'system-ui, sans-serif',
+            spacingUnit: '4px',
+            borderRadius: '8px'
+        }
+    }
+});
+
+console.log('Creating payment element...');
+document.getElementById('stripe-status').textContent = 'Creating payment form...';
+
+const paymentElement = elements.create('payment', {
+    layout: 'tabs'
+});
+
+console.log('Mounting payment element...');
+document.getElementById('stripe-status').textContent = 'Mounting payment form...';
+
+paymentElement.mount('#payment-element').then(() => {
+    console.log('✅ Payment element mounted successfully');
+    document.getElementById('stripe-status').textContent = '✅ Payment form ready!';
+    // Clear the loading message
+    const loadingDiv = document.querySelector('#payment-element .text-gray-400');
+    if (loadingDiv) {
+        loadingDiv.remove();
+    }
+}).catch((error) => {
+    console.error('❌ Failed to mount payment element:', error);
+    document.getElementById('stripe-status').textContent = '❌ Failed to load payment form';
+    document.getElementById('payment-element-error').textContent = 'Failed to load payment form. Please refresh the page.';
+    showMessage('Failed to load payment form. Please refresh the page.', 'error');
+});
+
+// Listen for payment element events
+paymentElement.on('ready', () => {
+    console.log('✅ Payment element is ready');
+});
+
+paymentElement.on('change', (event) => {
+    const errorElement = document.getElementById('payment-element-error');
+    if (event.error) {
+        errorElement.textContent = event.error.message;
+    } else {
+        errorElement.textContent = '';
+    }
+});
 
 // Handle form submission
 const form = document.getElementById('payment-form');
