@@ -95,7 +95,7 @@ require_once '../includes/header.php';
                     <div class="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3">
                         <div class="flex items-center gap-2 text-yellow-400 text-sm">
                             <i data-lucide="clock" class="w-4 h-4"></i>
-                            <span>Early access pricing - regular rates apply after first period</span>
+                            <span>Presale pricing - regular rates apply after first period</span>
                         </div>
                     </div>
                     <?php endif; ?>

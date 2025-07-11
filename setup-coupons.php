@@ -31,10 +31,10 @@ try {
             'name' => '£50 Off Coupon'
         ],
         [
-            'id' => 'EARLY25',
+            'id' => 'PRESALE25',
             'percent_off' => 25,
             'duration' => 'once',
-            'name' => 'Early Access 25% Off'
+            'name' => 'Presale 25% Off'
         ],
         [
             'id' => 'STUDENT15',
@@ -76,7 +76,7 @@ try {
     echo "- TEST1212: 10% off (one-time)\n";
     echo "- WELCOME20: 20% off (one-time)\n";
     echo "- SAVE50: £50 off (one-time)\n";
-    echo "- EARLY25: 25% off (one-time)\n";
+    echo "- PRESALE25: 25% off (one-time)\n";
     echo "- STUDENT15: 15% off (one-time)\n";
 
     echo "\n💡 You can now test these coupon codes in your checkout!\n";

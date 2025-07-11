@@ -33,7 +33,7 @@ define('STRIPE_WEBHOOK_SECRET', 'whsec_5RD0OvxIw4YkRKxfsRPupBOFmcEddpWB');
 
 // Premium pricing configuration
 define('PRESALE_END_DATE', '2025-07-20'); // When presale ends
-define('EARLY_ACCESS_DATE', '2025-07-20'); // When users get access to the bot
+define('PREMIUM_LAUNCH_DATE', '2025-07-20'); // When users get access to the bot
 
 // Get current page for navigation
 $current_page = basename($_SERVER['PHP_SELF'], '.php');

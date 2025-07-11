@@ -14,14 +14,14 @@ $discord_user = $user_authenticated ? $_SESSION['discord_user'] : null;
         <div class="text-center mb-16">
             <div class="inline-flex items-center px-4 py-2 bg-orange-500/20 border border-orange-500/30 rounded-full text-orange-400 text-sm font-medium mb-6">
                 <i data-lucide="zap" class="w-4 h-4 mr-2"></i>
-                Early Access Presale - Limited Time
+                Presale Pricing - Limited Time
             </div>
             <h2 class="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
                 The Best Features at the Best Prices
             </h2>
             <div class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 border border-yellow-500/30 rounded-xl text-yellow-400 font-semibold text-lg mb-8">
                 <i data-lucide="star" class="w-5 h-5 mr-2"></i>
-                Nexi Premium Early Access - Available July 20th, 2025
+                Nexi Premium - Available July 20th, 2025
             </div>
         </div>
 
@@ -46,7 +46,7 @@ $discord_user = $user_authenticated ? $_SESSION['discord_user'] : null;
                         onclick="startCheckout('monthly')" 
                         class="w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200"
                     >
-                        <?php echo $user_authenticated ? 'Get Early Access' : 'Login Required'; ?>
+                        <?php echo $user_authenticated ? 'Get Premium' : 'Login Required'; ?>
                     </button>
                 </div>
             </div>
@@ -75,7 +75,7 @@ $discord_user = $user_authenticated ? $_SESSION['discord_user'] : null;
                         onclick="startCheckout('yearly')" 
                         class="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200"
                     >
-                        <?php echo $user_authenticated ? 'Get Early Access' : 'Login Required'; ?>
+                        <?php echo $user_authenticated ? 'Get Premium' : 'Login Required'; ?>
                     </button>
                 </div>
             </div>
@@ -99,7 +99,7 @@ $discord_user = $user_authenticated ? $_SESSION['discord_user'] : null;
                         onclick="startCheckout('lifetime')" 
                         class="w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200"
                     >
-                        <?php echo $user_authenticated ? 'Get Early Access' : 'Login Required'; ?>
+                        <?php echo $user_authenticated ? 'Get Premium' : 'Login Required'; ?>
                     </button>
                 </div>
             </div>
@@ -112,7 +112,7 @@ $discord_user = $user_authenticated ? $_SESSION['discord_user'] : null;
                 <div>
                     <h4 class="font-semibold text-yellow-400 mb-2">Important Pricing Information</h4>
                     <ul class="text-yellow-200 text-sm space-y-1">
-                        <li>• Early access pricing is only guaranteed for your first billing period (month/year) or lifetime purchase</li>
+                        <li>• Presale pricing is only guaranteed for your first billing period (month/year) or lifetime purchase</li>
                         <li>• Regular pricing applies after the initial period ends (unless you purchase lifetime access)</li>
                         <li>• Monthly: £2.99 first month, then £4.99/month from August 20th, 2025</li>
                         <li>• Yearly: £24 first year, then £35/year from July 20th, 2026</li>
@@ -129,7 +129,7 @@ $discord_user = $user_authenticated ? $_SESSION['discord_user'] : null;
                 <div>
                     <h4 class="font-semibold text-blue-400 mb-2">Billing Schedule</h4>
                     <ul class="text-blue-200 text-sm space-y-1">
-                        <li>• <strong>Today:</strong> Pay discounted rate for early access</li>
+                        <li>• <strong>Today:</strong> Pay discounted presale price</li>
                         <li>• <strong>July 20th, 2025:</strong> Get access to Nexi Bot Premium features</li>
                         <li>• <strong>Monthly:</strong> Next billing on August 20th, 2025 at regular price</li>
                         <li>• <strong>Yearly:</strong> Next billing on July 20th, 2026 at regular price</li>

@@ -69,7 +69,7 @@ The system will automatically create the required tables:
 - **Discord OAuth** - Secure authentication
 - **Premium Status** - Automatic role management
 - **Server Tracking** - Record owned Discord servers
-- **Access Control** - Presale and early access dates
+- **Access Control** - Presale pricing and launch dates
 
 ### Security Features
 - **Webhook Verification** - Stripe signature validation

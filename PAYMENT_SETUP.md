@@ -155,7 +155,7 @@ When payment succeeds, the webhook will:
 
 ### Immediate Benefits:
 - Confirmation of purchase
-- Early access guaranteed for July 20th, 2025
+- Premium access guaranteed for July 20th, 2025
 - Receipt and payment confirmation
 - Access to premium Discord channels (if applicable)
 

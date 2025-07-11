@@ -88,7 +88,7 @@ $payment_verified = true; // You can implement Stripe verification here
                         </div>
                         <div class="flex items-start gap-2">
                             <i data-lucide="calendar" class="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0"></i>
-                            <span>Early access begins July 20th, 2025</span>
+                            <span>Premium access begins July 20th, 2025</span>
                         </div>
                         <div class="flex items-start gap-2">
                             <i data-lucide="users" class="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0"></i>
@@ -110,7 +110,7 @@ $payment_verified = true; // You can implement Stripe verification here
                 </div>
                 <div class="text-3xl font-bold text-white mb-2">July 20th, 2025</div>
                 <p class="text-orange-200">
-                    We're working hard to bring you Nexi Premium. You'll be notified via Discord DM when the bot is ready for early access users.
+                    We're working hard to bring you Nexi Premium. You'll be notified via Discord DM when the bot is ready for premium users.
                 </p>
             </div>
         </div>
