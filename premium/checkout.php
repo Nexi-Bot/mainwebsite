@@ -281,75 +281,144 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Stripe initialized successfully');
     if (statusElement) statusElement.textContent = 'Creating payment elements...';
 
-    const elements = stripe.elements({
-        appearance: {
-            theme: 'night',
-            variables: {
-                colorPrimary: '#ea580c',
-                colorBackground: '#1f2937',
-                colorText: '#ffffff',
-                colorDanger: '#ef4444',
-                fontFamily: 'system-ui, sans-serif',
-                spacingUnit: '4px',
-                borderRadius: '8px'
+    // Initialize elements with customer details when form is filled
+    let elements = null;
+    let paymentElement = null;
+    
+    // Function to initialize payment elements
+    async function initializePaymentElements() {
+        const emailInput = document.getElementById('email');
+        const fullNameInput = document.getElementById('full-name');
+        const postcodeInput = document.getElementById('postcode');
+        
+        // Only initialize if we have basic customer info
+        if (!emailInput.value.trim() || !fullNameInput.value.trim() || !postcodeInput.value.trim()) {
+            return;
+        }
+        
+        try {
+            console.log('Creating payment intent...');
+            if (statusElement) statusElement.textContent = 'Creating payment session...';
+            
+            // Create payment intent with customer details
+            const response = await fetch('/premium/create-payment-intent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    plan: '<?php echo $plan; ?>',
+                    email: emailInput.value.trim(),
+                    full_name: fullNameInput.value.trim(),
+                    postcode: postcodeInput.value.trim()
+                }),
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-        }
-    });
-
-    console.log('Creating payment element...');
-    if (statusElement) statusElement.textContent = 'Creating payment form...';
-
-    const paymentElement = elements.create('payment', {
-        layout: 'tabs'
-    });
-
-    console.log('Mounting payment element...');
-    if (statusElement) statusElement.textContent = 'Loading payment form...';
-
-    paymentElement.mount('#payment-element').then(() => {
-        console.log('✅ Payment element mounted successfully');
-        if (statusElement) statusElement.textContent = '✅ Payment form ready!';
-        // Clear the loading message
-        const loadingDiv = document.querySelector('#payment-element .text-gray-400');
-        if (loadingDiv) {
-            loadingDiv.remove();
-        }
-    }).catch((error) => {
-        console.error('❌ Failed to mount payment element:', error);
-        if (statusElement) statusElement.textContent = '❌ Failed to load payment form';
-        const errorElement = document.getElementById('payment-element-error');
-        if (errorElement) errorElement.textContent = 'Error: ' + error.message;
-        showMessage('Failed to load payment form: ' + error.message, 'error');
-    });
-
-    // Listen for payment element events
-    paymentElement.on('ready', () => {
-        console.log('✅ Payment element is ready for input');
-    });
-
-    paymentElement.on('change', (event) => {
-        const errorElement = document.getElementById('payment-element-error');
-        if (errorElement) {
-            if (event.error) {
-                errorElement.textContent = event.error.message;
-            } else {
-                errorElement.textContent = '';
+            
+            const result = await response.json();
+            
+            if (result.error) {
+                throw new Error(result.error);
             }
+            
+            if (!result.clientSecret) {
+                throw new Error('No client secret returned');
+            }
+            
+            console.log('✅ Payment intent created, initializing elements...');
+            if (statusElement) statusElement.textContent = 'Loading payment form...';
+            
+            // Create elements with the client secret
+            elements = stripe.elements({
+                clientSecret: result.clientSecret,
+                appearance: {
+                    theme: 'night',
+                    variables: {
+                        colorPrimary: '#ea580c',
+                        colorBackground: '#1f2937',
+                        colorText: '#ffffff',
+                        colorDanger: '#ef4444',
+                        fontFamily: 'system-ui, sans-serif',
+                        spacingUnit: '4px',
+                        borderRadius: '8px'
+                    }
+                }
+            });
+
+            console.log('Creating payment element...');
+            paymentElement = elements.create('payment', {
+                layout: 'tabs'
+            });
+
+            console.log('Mounting payment element...');
+            await paymentElement.mount('#payment-element');
+            
+            console.log('✅ Payment element mounted successfully');
+            if (statusElement) statusElement.textContent = '✅ Payment form ready!';
+            
+            // Clear the loading message
+            const loadingDiv = document.querySelector('#payment-element .text-gray-400');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+            
+            // Listen for payment element events
+            paymentElement.on('ready', () => {
+                console.log('✅ Payment element is ready for input');
+            });
+
+            paymentElement.on('change', (event) => {
+                const errorElement = document.getElementById('payment-element-error');
+                if (errorElement) {
+                    if (event.error) {
+                        errorElement.textContent = event.error.message;
+                    } else {
+                        errorElement.textContent = '';
+                    }
+                }
+            });
+            
+            // Store client secret and elements for later use
+            window.currentClientSecret = result.clientSecret;
+            window.currentPaymentType = result.type;
+            window.currentElements = elements;
+            
+        } catch (error) {
+            console.error('❌ Failed to initialize payment elements:', error);
+            if (statusElement) statusElement.textContent = '❌ Failed to load payment form';
+            const errorElement = document.getElementById('payment-element-error');
+            if (errorElement) errorElement.textContent = 'Error: ' + error.message;
+            showMessage('Failed to load payment form: ' + error.message, 'error');
+        }
+    }
+    
+    // Listen for form field changes to initialize payment elements
+    const formFields = ['email', 'full-name', 'postcode'];
+    formFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('blur', initializePaymentElements);
         }
     });
+    
+    // Also try to initialize immediately if fields are already filled
+    setTimeout(initializePaymentElements, 500);
 
     // Handle form submission
     const form = document.getElementById('payment-form');
     if (form) {
         form.addEventListener('submit', function(event) {
-            handleSubmit(event, stripe, elements);
+            handleSubmit(event, stripe);
         });
     }
 });
 
 let couponCode = null;
 
-async function handleSubmit(event, stripe, elements) {
+async function handleSubmit(event, stripe) {
     event.preventDefault();
     
     const submitButton = document.getElementById('submit-button');
@@ -399,48 +468,67 @@ async function handleSubmit(event, stripe, elements) {
     buttonSpinner.classList.remove('hidden');
     
     try {
-        console.log('Creating payment intent...');
-        
-        // Create payment intent
-        const response = await fetch('/premium/create-payment-intent', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                plan: '<?php echo $plan; ?>',
-                coupon: couponCode,
-                email: emailInput.value.trim(),
-                full_name: fullNameInput.value.trim(),
-                postcode: postcodeInput.value.trim()
-            }),
-        });
-        
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log('Payment intent result:', result);
-        
-        if (result.error) {
-            showMessage(result.error, 'error');
+        // Check if we have a client secret already (payment elements should be initialized)
+        if (!window.currentClientSecret) {
+            showMessage('Payment form not ready. Please fill in all fields and wait for the form to load.', 'error');
             return;
         }
         
-        if (!result.clientSecret) {
-            showMessage('Failed to create payment intent. Please try again.', 'error');
-            return;
+        console.log('Confirming payment with existing client secret...');
+        
+        // If we have a coupon, we might need to create a new payment intent
+        let clientSecret = window.currentClientSecret;
+        
+        if (couponCode) {
+            console.log('Applying coupon and creating new payment intent...');
+            
+            const response = await fetch('/premium/create-payment-intent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    plan: '<?php echo $plan; ?>',
+                    coupon: couponCode,
+                    email: emailInput.value.trim(),
+                    full_name: fullNameInput.value.trim(),
+                    postcode: postcodeInput.value.trim()
+                }),
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            console.log('Payment intent with coupon result:', result);
+            
+            if (result.error) {
+                showMessage(result.error, 'error');
+                return;
+            }
+            
+            if (!result.clientSecret) {
+                showMessage('Failed to apply coupon. Please try again.', 'error');
+                return;
+            }
+            
+            clientSecret = result.clientSecret;
         }
         
         console.log('Confirming payment...');
         
+        // Get the elements from window (they should be available globally)
+        const elements = window.currentElements;
+        if (!elements) {
+            showMessage('Payment form not ready. Please refresh the page and try again.', 'error');
+            return;
+        }
+        
         // Confirm payment
         const { error: stripeError } = await stripe.confirmPayment({
             elements,
-            clientSecret: result.clientSecret,
+            clientSecret: clientSecret,
             confirmParams: {
                 return_url: `${window.location.origin}/premium/success`,
                 receipt_email: emailInput.value.trim(),
