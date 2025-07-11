@@ -2,26 +2,8 @@
 session_start();
 require_once '../includes/config.php';
 require_once '../includes/database.php';
-                <!-- Coupon Code -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Coupon Code (Optional)</label>
-                    <div class="flex gap-2">
-                        <input 
-                            type="text" 
-                            id="coupon-code" 
-                            placeholder="Enter coupon code"
-                            class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        >
-                        <button 
-                            type="button"
-                            onclick="applyCoupon()"
-                            class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                        >
-                            Apply
-                        </button>
-                    </div>
-                    <div id="coupon-message" class="mt-2 text-sm"></div>
-                </div>is authenticated
+
+// Check if user is authenticated
 if (!isset($_SESSION['discord_user'])) {
     header('Location: /premium/error?type=auth_required');
     exit;
@@ -130,6 +112,7 @@ require_once '../includes/header.php';
                             class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
                         >
                         <button 
+                            type="button"
                             onclick="applyCoupon()"
                             class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                         >
@@ -256,6 +239,9 @@ async function handleSubmit(event) {
     const buttonSpinner = document.getElementById('button-spinner');
     const emailInput = document.getElementById('email');
     
+    // Clear any previous messages
+    document.getElementById('payment-messages').innerHTML = '';
+    
     // Validate required fields
     if (!emailInput.value.trim()) {
         showMessage('Please enter your email address.', 'error');
@@ -281,6 +267,8 @@ async function handleSubmit(event) {
     buttonSpinner.classList.remove('hidden');
     
     try {
+        console.log('Creating payment intent...');
+        
         // Create payment intent
         const response = await fetch('/premium/create-payment-intent', {
             method: 'POST',
@@ -294,12 +282,26 @@ async function handleSubmit(event) {
             }),
         });
         
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result = await response.json();
+        console.log('Payment intent result:', result);
         
         if (result.error) {
             showMessage(result.error, 'error');
             return;
         }
+        
+        if (!result.clientSecret) {
+            showMessage('Failed to create payment intent. Please try again.', 'error');
+            return;
+        }
+        
+        console.log('Confirming payment...');
         
         // Confirm payment
         const { error: stripeError } = await stripe.confirmPayment({
@@ -312,8 +314,8 @@ async function handleSubmit(event) {
         });
         
         if (stripeError) {
-            showMessage(stripeError.message, 'error');
             console.error('Stripe error:', stripeError);
+            showMessage(stripeError.message, 'error');
         }
     } catch (error) {
         console.error('Payment error:', error);
@@ -331,9 +333,17 @@ async function applyCoupon() {
     const couponMessage = document.getElementById('coupon-message');
     const code = couponInput.value.trim();
     
-    if (!code) return;
+    if (!code) {
+        couponMessage.innerHTML = `<span class="text-red-400">✗ Please enter a coupon code</span>`;
+        return;
+    }
+    
+    // Show loading state
+    couponMessage.innerHTML = `<span class="text-gray-400">⏳ Validating coupon...</span>`;
     
     try {
+        console.log('Validating coupon:', code);
+        
         const response = await fetch('/premium/validate-coupon', {
             method: 'POST',
             headers: {
@@ -342,15 +352,25 @@ async function applyCoupon() {
             body: JSON.stringify({ coupon: code }),
         });
         
+        console.log('Coupon validation response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result = await response.json();
+        console.log('Coupon validation result:', result);
         
         if (result.valid) {
             couponCode = code;
             couponMessage.innerHTML = `<span class="text-green-400">✓ Coupon applied: ${result.description}</span>`;
         } else {
-            couponMessage.innerHTML = `<span class="text-red-400">✗ Invalid coupon code</span>`;
+            couponCode = null;
+            couponMessage.innerHTML = `<span class="text-red-400">✗ ${result.error || 'Invalid coupon code'}</span>`;
         }
     } catch (error) {
+        console.error('Coupon validation error:', error);
+        couponCode = null;
         couponMessage.innerHTML = `<span class="text-red-400">✗ Error validating coupon</span>`;
     }
 }
