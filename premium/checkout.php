@@ -2,8 +2,26 @@
 session_start();
 require_once '../includes/config.php';
 require_once '../includes/database.php';
-
-// Check if user is authenticated
+                <!-- Coupon Code -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Coupon Code (Optional)</label>
+                    <div class="flex gap-2">
+                        <input 
+                            type="text" 
+                            id="coupon-code" 
+                            placeholder="Enter coupon code"
+                            class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                        <button 
+                            type="button"
+                            onclick="applyCoupon()"
+                            class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                        >
+                            Apply
+                        </button>
+                    </div>
+                    <div id="coupon-message" class="mt-2 text-sm"></div>
+                </div>is authenticated
 if (!isset($_SESSION['discord_user'])) {
     header('Location: /premium/error?type=auth_required');
     exit;
@@ -155,7 +173,23 @@ require_once '../includes/header.php';
 
                 <!-- Payment Form -->
                 <form id="payment-form">
+                    <!-- Email Address -->
                     <div class="mb-6">
+                        <label for="email" class="block text-sm font-medium text-gray-300 mb-2">Email Address *</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email"
+                            required
+                            placeholder="Enter your email address"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                        <p class="text-sm text-gray-400 mt-1">Receipt and billing information will be sent to this email</p>
+                    </div>
+
+                    <!-- Payment Elements -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Payment Information *</label>
                         <div id="payment-element">
                             <!-- Stripe Elements will create form elements here -->
                         </div>
@@ -220,6 +254,20 @@ async function handleSubmit(event) {
     const submitButton = document.getElementById('submit-button');
     const buttonText = document.getElementById('button-text');
     const buttonSpinner = document.getElementById('button-spinner');
+    const emailInput = document.getElementById('email');
+    
+    // Validate required fields
+    if (!emailInput.value.trim()) {
+        showMessage('Please enter your email address.', 'error');
+        emailInput.focus();
+        return;
+    }
+    
+    if (!emailInput.value.includes('@')) {
+        showMessage('Please enter a valid email address.', 'error');
+        emailInput.focus();
+        return;
+    }
     
     // Check legal agreement
     if (!document.getElementById('legal-agreement').checked) {
@@ -241,33 +289,35 @@ async function handleSubmit(event) {
             },
             body: JSON.stringify({
                 plan: '<?php echo $plan; ?>',
-                coupon: couponCode
+                coupon: couponCode,
+                email: emailInput.value.trim()
             }),
         });
         
-        const { clientSecret, error } = await response.json();
+        const result = await response.json();
         
-        if (error) {
-            showMessage(error, 'error');
+        if (result.error) {
+            showMessage(result.error, 'error');
             return;
         }
         
         // Confirm payment
         const { error: stripeError } = await stripe.confirmPayment({
             elements,
-            clientSecret,
+            clientSecret: result.clientSecret,
             confirmParams: {
                 return_url: `${window.location.origin}/premium/success`,
+                receipt_email: emailInput.value.trim(),
             },
         });
         
         if (stripeError) {
             showMessage(stripeError.message, 'error');
-            // Log error for debugging
             console.error('Stripe error:', stripeError);
         }
     } catch (error) {
-        showMessage('An unexpected error occurred.', 'error');
+        console.error('Payment error:', error);
+        showMessage('An unexpected error occurred. Please try again.', 'error');
     } finally {
         // Re-enable submit button
         submitButton.disabled = false;

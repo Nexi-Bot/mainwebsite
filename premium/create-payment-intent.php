@@ -17,6 +17,20 @@ if (!isset($_SESSION['discord_user'])) {
 $input = json_decode(file_get_contents('php://input'), true);
 $plan = $input['plan'] ?? null;
 $coupon = $input['coupon'] ?? null;
+$email = $input['email'] ?? null;
+
+// Validate required fields
+if (!$plan) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Plan is required']);
+    exit;
+}
+
+if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Valid email address is required']);
+    exit;
+}
 
 // Validate plan
 if (!in_array($plan, ['monthly', 'yearly', 'lifetime'])) {
@@ -64,6 +78,7 @@ try {
             'amount' => $selected_plan['presale_amount'],
             'currency' => $selected_plan['currency'],
             'description' => $selected_plan['description'],
+            'receipt_email' => $email,
             'metadata' => [
                 'discord_user_id' => $user['id'],
                 'discord_username' => $user['username'],
@@ -96,7 +111,7 @@ try {
         
         // First, create or get customer
         $customer_data = [
-            'email' => $user['username'] . '@discord.user',
+            'email' => $email,
             'name' => $user['username'],
             'metadata' => [
                 'discord_id' => $user['id'],
@@ -104,14 +119,18 @@ try {
             ]
         ];
 
-        // Check if customer already exists
+        // Check if customer already exists by email
         $existing_customers = \Stripe\Customer::all([
-            'email' => $customer_data['email'],
+            'email' => $email,
             'limit' => 1
         ]);
 
         if (count($existing_customers->data) > 0) {
             $customer = $existing_customers->data[0];
+            // Update customer metadata if needed
+            \Stripe\Customer::update($customer->id, [
+                'metadata' => $customer_data['metadata']
+            ]);
         } else {
             $customer = \Stripe\Customer::create($customer_data);
         }

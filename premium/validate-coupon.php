@@ -30,7 +30,23 @@ try {
     // Validate coupon with Stripe
     $coupon = \Stripe\Coupon::retrieve($coupon_code);
     
-    if ($coupon->valid) {
+    // Check if coupon is valid (not expired and within redemption limits)
+    $is_valid = true;
+    $error_message = '';
+    
+    if (!$coupon) {
+        $is_valid = false;
+        $error_message = 'Coupon not found';
+    } elseif (isset($coupon->max_redemptions) && $coupon->max_redemptions && 
+              isset($coupon->times_redeemed) && $coupon->times_redeemed >= $coupon->max_redemptions) {
+        $is_valid = false;
+        $error_message = 'Coupon has reached its redemption limit';
+    } elseif (isset($coupon->redeem_by) && $coupon->redeem_by && $coupon->redeem_by < time()) {
+        $is_valid = false;
+        $error_message = 'Coupon has expired';
+    }
+    
+    if ($is_valid) {
         $description = '';
         
         if ($coupon->percent_off) {
@@ -56,7 +72,7 @@ try {
     } else {
         echo json_encode([
             'valid' => false,
-            'error' => 'Coupon is not valid or has expired'
+            'error' => $error_message
         ]);
     }
 
