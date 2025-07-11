@@ -40,11 +40,15 @@ try {
             break;
         
         case 'invoice.payment_succeeded':
-            handleSubscriptionRenewal($event['data']['object']);
+            handleInvoicePaymentSuccess($event['data']['object']);
             break;
         
         case 'customer.subscription.deleted':
             handleSubscriptionCancellation($event['data']['object']);
+            break;
+            
+        case 'customer.subscription.updated':
+            handleSubscriptionUpdate($event['data']['object']);
             break;
         
         default:
@@ -73,91 +77,165 @@ function handlePaymentSuccess($payment_intent) {
     }
 
     try {
-        // Calculate expiration date
-        $expires_at = null;
-        if ($premium_type === 'monthly') {
-            $expires_at = date('Y-m-d H:i:s', strtotime('+1 month'));
-        } elseif ($premium_type === 'yearly') {
-            $expires_at = date('Y-m-d H:i:s', strtotime('+1 year'));
-        }
-        // lifetime = null (never expires)
+        // Only handle lifetime payments here (subscriptions are handled in invoice.payment_succeeded)
+        if ($purchase_type === 'lifetime') {
+            // Update user premium status for lifetime
+            $db->query(
+                "UPDATE users SET 
+                    premium_status = 'active',
+                    premium_type = 'lifetime',
+                    premium_expires_at = NULL,
+                    stripe_customer_id = ?,
+                    premium_billing_amount = ?,
+                    updated_at = NOW()
+                WHERE user_id = ?",
+                [
+                    $payment_intent->customer ?? null,
+                    $payment_intent->amount,
+                    $discord_user_id
+                ]
+            );
 
+            // Record payment
+            $db->query(
+                "INSERT INTO payments (user_id, stripe_payment_intent_id, amount_paid, plan_type, status, created_at) 
+                 VALUES (?, ?, ?, ?, 'completed', NOW())",
+                [
+                    $discord_user_id,
+                    $payment_intent->id,
+                    $payment_intent->amount,
+                    'lifetime'
+                ]
+            );
+
+            error_log("Lifetime premium activated for user: {$discord_user_id}");
+        }
+
+    } catch (Exception $e) {
+        error_log("Failed to process payment success for {$discord_user_id}: " . $e->getMessage());
+    }
+}
+
+function handleInvoicePaymentSuccess($invoice) {
+    global $db;
+    
+    // This handles subscription payments (both initial and recurring)
+    $subscription_id = $invoice->subscription ?? null;
+    
+    if (!$subscription_id) {
+        return; // Not a subscription payment
+    }
+
+    try {
+        // Get subscription details from Stripe
+        require_once '../vendor/autoload.php';
+        \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
+        
+        $subscription = \Stripe\Subscription::retrieve($subscription_id);
+        
+        $discord_user_id = $subscription->metadata->discord_user_id ?? null;
+        $premium_type = $subscription->metadata->premium_type ?? null;
+        
+        if (!$discord_user_id || !$premium_type) {
+            error_log('Missing metadata in subscription: ' . $subscription_id);
+            return;
+        }
+
+        // Calculate next billing date
+        $next_billing = date('Y-m-d H:i:s', $subscription->current_period_end);
+        
         // Update user premium status
         $db->query(
             "UPDATE users SET 
-                premium = TRUE,
+                premium_status = 'active',
                 premium_type = ?,
                 premium_expires_at = ?,
                 stripe_customer_id = ?,
+                stripe_subscription_id = ?,
+                premium_billing_amount = ?,
                 updated_at = NOW()
             WHERE user_id = ?",
             [
                 $premium_type,
-                $expires_at,
-                $payment_intent->customer ?? null,
+                $next_billing,
+                $subscription->customer,
+                $subscription_id,
+                $invoice->amount_paid,
                 $discord_user_id
             ]
         );
 
-        // Log the successful purchase
-        error_log("Premium activated for user {$discord_user_id}: {$premium_type}");
-        
-        // Send webhook notification to Discord (optional)
-        sendDiscordNotification($discord_user_id, $premium_type, $payment_intent->amount_received);
+        // Record payment
+        $db->query(
+            "INSERT INTO payments (user_id, stripe_payment_intent_id, stripe_subscription_id, amount_paid, plan_type, status, created_at) 
+             VALUES (?, ?, ?, ?, ?, 'completed', NOW())",
+            [
+                $discord_user_id,
+                $invoice->payment_intent,
+                $subscription_id,
+                $invoice->amount_paid,
+                $premium_type
+            ]
+        );
+
+        error_log("Subscription payment processed for user: {$discord_user_id}, type: {$premium_type}");
 
     } catch (Exception $e) {
-        error_log("Failed to update user premium status: " . $e->getMessage());
+        error_log("Failed to process subscription payment for {$subscription_id}: " . $e->getMessage());
     }
 }
 
-function handleSubscriptionRenewal($invoice) {
+function handleSubscriptionUpdate($subscription) {
     global $db;
     
-    $customer_id = $invoice->customer;
+    $discord_user_id = $subscription->metadata->discord_user_id ?? null;
     
+    if (!$discord_user_id) {
+        return;
+    }
+
     try {
-        // Find user by Stripe customer ID
-        $user = $db->fetch(
-            "SELECT user_id, premium_type FROM users WHERE stripe_customer_id = ?",
-            [$customer_id]
+        // Update subscription details in database
+        $next_billing = date('Y-m-d H:i:s', $subscription->current_period_end);
+        
+        $db->query(
+            "UPDATE users SET 
+                premium_expires_at = ?,
+                updated_at = NOW()
+            WHERE user_id = ?",
+            [
+                $next_billing,
+                $discord_user_id
+            ]
         );
-        
-        if ($user) {
-            // Calculate new expiration date
-            $expires_at = null;
-            if ($user['premium_type'] === 'monthly') {
-                $expires_at = date('Y-m-d H:i:s', strtotime('+1 month'));
-            } elseif ($user['premium_type'] === 'yearly') {
-                $expires_at = date('Y-m-d H:i:s', strtotime('+1 year'));
-            }
-            
-            // Update expiration date
-            $db->query(
-                "UPDATE users SET premium_expires_at = ?, updated_at = NOW() WHERE user_id = ?",
-                [$expires_at, $user['user_id']]
-            );
-            
-            error_log("Premium renewed for user {$user['user_id']}: {$user['premium_type']}");
-        }
-        
+
+        error_log("Subscription updated for user: {$discord_user_id}");
+
     } catch (Exception $e) {
-        error_log("Failed to handle subscription renewal: " . $e->getMessage());
+        error_log("Failed to handle subscription update: " . $e->getMessage());
     }
 }
 
 function handleSubscriptionCancellation($subscription) {
     global $db;
     
-    $customer_id = $subscription->customer;
+    $discord_user_id = $subscription->metadata->discord_user_id ?? null;
+    
+    if (!$discord_user_id) {
+        return;
+    }
     
     try {
-        // Set premium to false when subscription is cancelled
+        // Set premium status to cancelled when subscription is cancelled
         $db->query(
-            "UPDATE users SET premium = FALSE, updated_at = NOW() WHERE stripe_customer_id = ?",
-            [$customer_id]
+            "UPDATE users SET 
+                premium_status = 'cancelled',
+                updated_at = NOW() 
+            WHERE user_id = ?",
+            [$discord_user_id]
         );
         
-        error_log("Premium cancelled for customer: {$customer_id}");
+        error_log("Premium cancelled for user: {$discord_user_id}");
         
     } catch (Exception $e) {
         error_log("Failed to handle subscription cancellation: " . $e->getMessage());
