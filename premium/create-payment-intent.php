@@ -161,10 +161,12 @@ try {
                 'interval' => $selected_plan['interval'],
                 'interval_count' => 1
             ],
-            'nickname' => "Nexi Premium {$plan} - Presale",
-            'metadata' => [
-                'type' => 'presale',
-                'plan' => $plan
+            'product_data' => [
+                'name' => "Nexi Premium {$plan} - Presale",
+                'metadata' => [
+                    'type' => 'presale',
+                    'plan' => $plan
+                ]
             ]
         ]);
 
@@ -175,10 +177,12 @@ try {
                 'interval' => $selected_plan['interval'],
                 'interval_count' => 1
             ],
-            'nickname' => "Nexi Premium {$plan} - Regular",
-            'metadata' => [
-                'type' => 'regular',
-                'plan' => $plan
+            'product_data' => [
+                'name' => "Nexi Premium {$plan} - Regular",
+                'metadata' => [
+                    'type' => 'regular',
+                    'plan' => $plan
+                ]
             ]
         ]);
 
