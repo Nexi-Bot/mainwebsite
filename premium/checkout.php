@@ -170,6 +170,34 @@ require_once '../includes/header.php';
                         <p class="text-sm text-gray-400 mt-1">Receipt and billing information will be sent to this email</p>
                     </div>
 
+                    <!-- Full Name -->
+                    <div class="mb-6">
+                        <label for="full-name" class="block text-sm font-medium text-gray-300 mb-2">Full Name *</label>
+                        <input 
+                            type="text" 
+                            id="full-name" 
+                            name="full-name"
+                            required
+                            placeholder="Enter your full name"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                        <p class="text-sm text-gray-400 mt-1">As it appears on your payment method</p>
+                    </div>
+
+                    <!-- Postcode -->
+                    <div class="mb-6">
+                        <label for="postcode" class="block text-sm font-medium text-gray-300 mb-2">Postcode *</label>
+                        <input 
+                            type="text" 
+                            id="postcode" 
+                            name="postcode"
+                            required
+                            placeholder="Enter your postcode"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                        <p class="text-sm text-gray-400 mt-1">For billing address verification</p>
+                    </div>
+
                     <!-- Payment Elements -->
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-300 mb-2">Payment Information *</label>
@@ -226,87 +254,110 @@ require_once '../includes/header.php';
 <!-- Stripe JS -->
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-console.log('Initializing Stripe...');
-document.getElementById('stripe-status').textContent = 'Loading Stripe...';
+<!-- Stripe JS -->
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+console.log('Starting Stripe initialization...');
 
-const stripe = Stripe('<?php echo STRIPE_PUBLISHABLE_KEY; ?>');
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM ready, initializing Stripe...');
+    
+    // Check if elements exist
+    const statusElement = document.getElementById('stripe-status');
+    if (statusElement) {
+        statusElement.textContent = 'Initializing Stripe...';
+    }
 
-if (!stripe) {
-    console.error('Stripe failed to initialize');
-    document.getElementById('stripe-status').textContent = 'Failed to initialize!';
-    showMessage('Failed to load payment system. Please refresh the page.', 'error');
-} else {
-    document.getElementById('stripe-status').textContent = 'Stripe loaded, creating elements...';
-}
+    const stripe = Stripe('<?php echo STRIPE_PUBLISHABLE_KEY; ?>');
 
-console.log('Creating Stripe Elements...');
-const elements = stripe.elements({
-    appearance: {
-        theme: 'night',
-        variables: {
-            colorPrimary: '#ea580c',
-            colorBackground: '#1f2937',
-            colorText: '#ffffff',
-            colorDanger: '#ef4444',
-            fontFamily: 'system-ui, sans-serif',
-            spacingUnit: '4px',
-            borderRadius: '8px'
+    if (!stripe) {
+        console.error('Stripe failed to initialize');
+        if (statusElement) statusElement.textContent = '❌ Stripe failed to load';
+        showMessage('Failed to load payment system. Please refresh the page.', 'error');
+        return;
+    }
+
+    console.log('✅ Stripe initialized successfully');
+    if (statusElement) statusElement.textContent = 'Creating payment elements...';
+
+    const elements = stripe.elements({
+        appearance: {
+            theme: 'night',
+            variables: {
+                colorPrimary: '#ea580c',
+                colorBackground: '#1f2937',
+                colorText: '#ffffff',
+                colorDanger: '#ef4444',
+                fontFamily: 'system-ui, sans-serif',
+                spacingUnit: '4px',
+                borderRadius: '8px'
+            }
         }
+    });
+
+    console.log('Creating payment element...');
+    if (statusElement) statusElement.textContent = 'Creating payment form...';
+
+    const paymentElement = elements.create('payment', {
+        layout: 'tabs'
+    });
+
+    console.log('Mounting payment element...');
+    if (statusElement) statusElement.textContent = 'Loading payment form...';
+
+    paymentElement.mount('#payment-element').then(() => {
+        console.log('✅ Payment element mounted successfully');
+        if (statusElement) statusElement.textContent = '✅ Payment form ready!';
+        // Clear the loading message
+        const loadingDiv = document.querySelector('#payment-element .text-gray-400');
+        if (loadingDiv) {
+            loadingDiv.remove();
+        }
+    }).catch((error) => {
+        console.error('❌ Failed to mount payment element:', error);
+        if (statusElement) statusElement.textContent = '❌ Failed to load payment form';
+        const errorElement = document.getElementById('payment-element-error');
+        if (errorElement) errorElement.textContent = 'Error: ' + error.message;
+        showMessage('Failed to load payment form: ' + error.message, 'error');
+    });
+
+    // Listen for payment element events
+    paymentElement.on('ready', () => {
+        console.log('✅ Payment element is ready for input');
+    });
+
+    paymentElement.on('change', (event) => {
+        const errorElement = document.getElementById('payment-element-error');
+        if (errorElement) {
+            if (event.error) {
+                errorElement.textContent = event.error.message;
+            } else {
+                errorElement.textContent = '';
+            }
+        }
+    });
+
+    // Handle form submission
+    const form = document.getElementById('payment-form');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            handleSubmit(event, stripe, elements);
+        });
     }
 });
-
-console.log('Creating payment element...');
-document.getElementById('stripe-status').textContent = 'Creating payment form...';
-
-const paymentElement = elements.create('payment', {
-    layout: 'tabs'
-});
-
-console.log('Mounting payment element...');
-document.getElementById('stripe-status').textContent = 'Mounting payment form...';
-
-paymentElement.mount('#payment-element').then(() => {
-    console.log('✅ Payment element mounted successfully');
-    document.getElementById('stripe-status').textContent = '✅ Payment form ready!';
-    // Clear the loading message
-    const loadingDiv = document.querySelector('#payment-element .text-gray-400');
-    if (loadingDiv) {
-        loadingDiv.remove();
-    }
-}).catch((error) => {
-    console.error('❌ Failed to mount payment element:', error);
-    document.getElementById('stripe-status').textContent = '❌ Failed to load payment form';
-    document.getElementById('payment-element-error').textContent = 'Failed to load payment form. Please refresh the page.';
-    showMessage('Failed to load payment form. Please refresh the page.', 'error');
-});
-
-// Listen for payment element events
-paymentElement.on('ready', () => {
-    console.log('✅ Payment element is ready');
-});
-
-paymentElement.on('change', (event) => {
-    const errorElement = document.getElementById('payment-element-error');
-    if (event.error) {
-        errorElement.textContent = event.error.message;
-    } else {
-        errorElement.textContent = '';
-    }
-});
-
-// Handle form submission
-const form = document.getElementById('payment-form');
-form.addEventListener('submit', handleSubmit);
 
 let couponCode = null;
 
-async function handleSubmit(event) {
+async function handleSubmit(event, stripe, elements) {
     event.preventDefault();
     
     const submitButton = document.getElementById('submit-button');
     const buttonText = document.getElementById('button-text');
     const buttonSpinner = document.getElementById('button-spinner');
     const emailInput = document.getElementById('email');
+    const fullNameInput = document.getElementById('full-name');
+    const postcodeInput = document.getElementById('postcode');
     
     // Clear any previous messages
     document.getElementById('payment-messages').innerHTML = '';
@@ -321,6 +372,18 @@ async function handleSubmit(event) {
     if (!emailInput.value.includes('@')) {
         showMessage('Please enter a valid email address.', 'error');
         emailInput.focus();
+        return;
+    }
+    
+    if (!fullNameInput.value.trim()) {
+        showMessage('Please enter your full name.', 'error');
+        fullNameInput.focus();
+        return;
+    }
+    
+    if (!postcodeInput.value.trim()) {
+        showMessage('Please enter your postcode.', 'error');
+        postcodeInput.focus();
         return;
     }
     
@@ -347,7 +410,9 @@ async function handleSubmit(event) {
             body: JSON.stringify({
                 plan: '<?php echo $plan; ?>',
                 coupon: couponCode,
-                email: emailInput.value.trim()
+                email: emailInput.value.trim(),
+                full_name: fullNameInput.value.trim(),
+                postcode: postcodeInput.value.trim()
             }),
         });
         

@@ -18,6 +18,8 @@ $input = json_decode(file_get_contents('php://input'), true);
 $plan = $input['plan'] ?? null;
 $coupon = $input['coupon'] ?? null;
 $email = $input['email'] ?? null;
+$full_name = $input['full_name'] ?? null;
+$postcode = $input['postcode'] ?? null;
 
 // Validate required fields
 if (!$plan) {
@@ -29,6 +31,18 @@ if (!$plan) {
 if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     http_response_code(400);
     echo json_encode(['error' => 'Valid email address is required']);
+    exit;
+}
+
+if (!$full_name || strlen(trim($full_name)) < 2) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Full name is required']);
+    exit;
+}
+
+if (!$postcode || strlen(trim($postcode)) < 3) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Valid postcode is required']);
     exit;
 }
 
@@ -80,6 +94,13 @@ try {
             'description' => $selected_plan['description'],
             'receipt_email' => $email,
             'metadata' => [
+                'plan' => $plan,
+                'discord_id' => $user['id'],
+                'discord_username' => $user['username'],
+                'customer_name' => $full_name,
+                'postcode' => $postcode
+            ]
+            'metadata' => [
                 'discord_user_id' => $user['id'],
                 'discord_username' => $user['username'],
                 'premium_type' => $plan,
@@ -112,10 +133,11 @@ try {
         // First, create or get customer
         $customer_data = [
             'email' => $email,
-            'name' => $user['username'],
+            'name' => $full_name,
             'metadata' => [
                 'discord_id' => $user['id'],
-                'discord_username' => $user['username']
+                'discord_username' => $user['username'],
+                'postcode' => $postcode
             ]
         ];
 
@@ -127,8 +149,9 @@ try {
 
         if (count($existing_customers->data) > 0) {
             $customer = $existing_customers->data[0];
-            // Update customer metadata if needed
+            // Update customer with new information
             \Stripe\Customer::update($customer->id, [
+                'name' => $full_name,
                 'metadata' => $customer_data['metadata']
             ]);
         } else {
