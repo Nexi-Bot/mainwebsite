@@ -94,17 +94,12 @@ try {
             'description' => $selected_plan['description'],
             'receipt_email' => $email,
             'metadata' => [
-                'plan' => $plan,
-                'discord_id' => $user['id'],
-                'discord_username' => $user['username'],
-                'customer_name' => $full_name,
-                'postcode' => $postcode
-            ]
-            'metadata' => [
                 'discord_user_id' => $user['id'],
                 'discord_username' => $user['username'],
                 'premium_type' => $plan,
-                'purchase_type' => 'lifetime'
+                'purchase_type' => 'lifetime',
+                'customer_name' => $full_name,
+                'postcode' => $postcode
             ]
         ];
 
