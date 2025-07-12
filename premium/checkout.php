@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Create payment intent with customer details
             const requestData = {
-                plan: '<?php echo $plan; ?>',
+                plan: <?php echo json_encode($plan); ?>,
                 email: emailInput.value.trim(),
                 full_name: fullNameInput.value.trim(),
                 postcode: postcodeInput.value.trim()
@@ -550,7 +550,7 @@ async function handleSubmit(event, stripe) {
             console.log('Applying coupon and creating new payment intent...');
             
             const requestData = {
-                plan: '<?php echo $plan; ?>',
+                plan: <?php echo json_encode($plan); ?>,
                 coupon: couponCode,
                 email: emailInput.value.trim(),
                 full_name: fullNameInput.value.trim(),
