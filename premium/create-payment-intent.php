@@ -21,6 +21,22 @@ if (isset($_SERVER['HTTP_ORIGIN'])) {
 error_log('Payment Intent Auth Debug - Session ID: ' . session_id());
 error_log('Payment Intent Auth Debug - Session data: ' . print_r($_SESSION, true));
 error_log('Payment Intent Auth Debug - Discord user isset: ' . (isset($_SESSION['discord_user']) ? 'true' : 'false'));
+error_log('Payment Intent Auth Debug - Headers: ' . print_r(getallheaders(), true));
+
+// Check for test authentication bypass (for debugging only)
+$test_auth = false;
+if (isset($_SERVER['HTTP_X_TEST_AUTH']) && $_SERVER['HTTP_X_TEST_AUTH'] === 'bypass') {
+    $test_auth = true;
+    $_SESSION['discord_user'] = [
+        'id' => $_SERVER['HTTP_X_DISCORD_USER_ID'] ?? '123456789',
+        'username' => $_SERVER['HTTP_X_DISCORD_USERNAME'] ?? 'testuser',
+        'discriminator' => '0001',
+        'avatar' => null,
+        'verified' => true,
+        'email' => 'test@example.com'
+    ];
+    error_log('Payment Intent Auth Debug - Using test auth bypass');
+}
 
 if (!isset($_SESSION['discord_user'])) {
     http_response_code(401);
@@ -28,7 +44,9 @@ if (!isset($_SESSION['discord_user'])) {
         'error' => 'User not authenticated',
         'debug_session_id' => session_id(),
         'debug_session_data' => $_SESSION,
-        'debug_cookies' => $_COOKIE
+        'debug_cookies' => $_COOKIE,
+        'debug_headers' => getallheaders(),
+        'debug_test_auth' => $test_auth
     ]);
     exit;
 }

@@ -5,7 +5,7 @@ require_once '../includes/database.php';
 
 // Check if user is authenticated
 if (!isset($_SESSION['discord_user'])) {
-    header('Location: error.php?type=auth_required');
+    header('Location: /auth/discord-login.php');
     exit;
 }
 
@@ -136,7 +136,7 @@ require_once '../includes/header.php';
                         </div>
                         <div class="flex items-center gap-3">
                             <div class="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs">3</div>
-                            <span class="text-gray-400">Get notified when bot is available (July 20th, 2025)</span>
+                            <span class="text-gray-400">Start using Nexi Bot Premium immediately</span>
                         </div>
                     </div>
                 </div>
@@ -202,24 +202,12 @@ require_once '../includes/header.php';
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-300 mb-2">Payment Information *</label>
                         
-                        <!-- Debug info -->
-                        <div id="stripe-debug" class="mb-2 p-2 bg-blue-900/20 border border-blue-500/30 rounded text-blue-400 text-xs">
-                            Stripe Status: <span id="stripe-status">Initializing...</span><br>
-                            <strong>Debug Info:</strong> Plan = "<?php echo htmlspecialchars($plan); ?>", URL = "<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'unknown'); ?>"<br>
-                            <button type="button" onclick="tryInitializePayment()" class="ml-2 px-2 py-1 bg-blue-600 text-white text-xs rounded">
-                                Load Payment Form
-                            </button>
-                            <button type="button" onclick="testEndpoint()" class="ml-2 px-2 py-1 bg-green-600 text-white text-xs rounded">
-                                Test Connection
-                            </button>
-                            <button type="button" onclick="debugSession()" class="ml-2 px-2 py-1 bg-purple-600 text-white text-xs rounded">
-                                Debug Session
-                            </button>
-                        </div>
-                        
                         <div id="payment-element" class="min-h-[60px] p-4 bg-gray-800 border border-gray-700 rounded-lg">
                             <!-- Stripe Elements will create form elements here -->
-                            <div class="text-gray-400 text-sm">Loading payment form...</div>
+                            <div class="text-gray-400 text-sm flex items-center justify-center py-4">
+                                <i data-lucide="credit-card" class="w-4 h-4 mr-2"></i>
+                                Complete the fields above to load payment options
+                            </div>
                         </div>
                         <div id="payment-element-error" class="mt-2 text-sm text-red-400"></div>
                     </div>
@@ -264,29 +252,14 @@ require_once '../includes/header.php';
 <!-- Stripe JS -->
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-console.log('Starting Stripe initialization...');
-
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM ready, initializing Stripe...');
-    
-    // Check if elements exist
-    const statusElement = document.getElementById('stripe-status');
-    if (statusElement) {
-        statusElement.textContent = 'Initializing Stripe...';
-    }
-
     const stripe = Stripe('<?php echo STRIPE_PUBLISHABLE_KEY; ?>');
 
     if (!stripe) {
-        console.error('Stripe failed to initialize');
-        if (statusElement) statusElement.textContent = '❌ Stripe failed to load';
         showMessage('Failed to load payment system. Please refresh the page.', 'error');
         return;
     }
-
-    console.log('✅ Stripe initialized successfully');
-    if (statusElement) statusElement.textContent = 'Creating payment elements...';
 
     // Initialize elements with customer details when form is filled
     let elements = null;
@@ -300,21 +273,25 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Check if already initialized
         if (window.currentElements) {
-            console.log('Payment elements already initialized');
-            if (statusElement) statusElement.textContent = '✅ Payment form ready!';
             return;
         }
         
         // Only initialize if we have basic customer info
         if (!emailInput.value.trim() || !fullNameInput.value.trim() || !postcodeInput.value.trim()) {
-            if (statusElement) statusElement.textContent = '⏳ Fill in all fields to load payment form';
-            showMessage('Please fill in your email, name, and postcode to load the payment form.', 'info');
+            // Update the loading message
+            const loadingDiv = document.querySelector('#payment-element .text-gray-400');
+            if (loadingDiv) {
+                loadingDiv.innerHTML = '<i data-lucide="credit-card" class="w-4 h-4 mr-2"></i>Complete the fields above to load payment options';
+            }
             return;
         }
         
         try {
-            console.log('Creating payment intent...');
-            if (statusElement) statusElement.textContent = 'Creating payment session...';
+            // Update loading message
+            const loadingDiv = document.querySelector('#payment-element .text-gray-400');
+            if (loadingDiv) {
+                loadingDiv.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i>Loading secure payment form...';
+            }
             
             // Create payment intent with customer details
             const requestData = {
@@ -323,12 +300,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 full_name: fullNameInput.value.trim(),
                 postcode: postcodeInput.value.trim()
             };
-            
-            console.log('Plan from PHP:', <?php echo json_encode($plan); ?>);
-            console.log('PHP plan variable debug:', '<?php echo addslashes($plan); ?>');
-            console.log('GET params debug:', <?php echo json_encode($_GET); ?>);
-            console.log('Sending payment intent request:', requestData);
-            console.log('JSON stringified:', JSON.stringify(requestData));
             
             const response = await fetch('create-payment-intent.php', {
                 method: 'POST',
@@ -340,14 +311,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(requestData),
             });
             
-            console.log('Response status:', response.status);
-            console.log('Response headers:', response.headers);
-            
             if (!response.ok) {
-                // Try to get the response text for better error debugging
                 const errorText = await response.text();
-                console.log('Error response:', errorText);
-                throw new Error(`HTTP error! status: ${response.status} - ${errorText.substring(0, 100)}`);
+                throw new Error(`Payment setup failed. Please try again.`);
             }
             
             const result = await response.json();
@@ -357,11 +323,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (!result.clientSecret) {
-                throw new Error('No client secret returned');
+                throw new Error('Payment setup failed. Please try again.');
             }
-            
-            console.log('✅ Payment intent created, initializing elements...');
-            if (statusElement) statusElement.textContent = 'Loading payment form...';
             
             // Create elements with the client secret
             elements = stripe.elements({
@@ -380,16 +343,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            console.log('Creating payment element...');
             paymentElement = elements.create('payment', {
                 layout: 'tabs'
             });
 
-            console.log('Mounting payment element...');
             await paymentElement.mount('#payment-element');
-            
-            console.log('✅ Payment element mounted successfully');
-            if (statusElement) statusElement.textContent = '✅ Payment form ready!';
             
             // Clear the loading message
             const loadingDiv = document.querySelector('#payment-element .text-gray-400');
@@ -398,10 +356,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Listen for payment element events
-            paymentElement.on('ready', () => {
-                console.log('✅ Payment element is ready for input');
-            });
-
             paymentElement.on('change', (event) => {
                 const errorElement = document.getElementById('payment-element-error');
                 if (errorElement) {
@@ -419,11 +373,9 @@ document.addEventListener('DOMContentLoaded', function() {
             window.currentElements = elements;
             
         } catch (error) {
-            console.error('❌ Failed to initialize payment elements:', error);
-            if (statusElement) statusElement.textContent = '❌ Failed to load payment form';
             const errorElement = document.getElementById('payment-element-error');
-            if (errorElement) errorElement.textContent = 'Error: ' + error.message;
-            showMessage('Failed to load payment form: ' + error.message, 'error');
+            if (errorElement) errorElement.textContent = 'Failed to load payment form. Please refresh and try again.';
+            showMessage('Failed to load payment form. Please refresh and try again.', 'error');
         }
     }
     
@@ -434,88 +386,34 @@ document.addEventListener('DOMContentLoaded', function() {
         if (field) {
             field.addEventListener('blur', initializePaymentElements);
             field.addEventListener('input', () => {
-                // Debounced initialization after typing
+                // Trigger payment form loading after user stops typing
                 clearTimeout(field.initTimeout);
-                field.initTimeout = setTimeout(initializePaymentElements, 1000);
+                field.initTimeout = setTimeout(() => {
+                    // Check if all fields are filled
+                    const allFieldsFilled = formFields.every(id => {
+                        const field = document.getElementById(id);
+                        return field && field.value.trim() !== '';
+                    });
+                    
+                    if (allFieldsFilled) {
+                        initializePaymentElements();
+                    }
+                }, 300); // Quick response for better UX
             });
         }
     });
     
-    // Also try to initialize immediately if fields are already filled
-    setTimeout(initializePaymentElements, 500);
-
-    // Make initialization function globally available
-    window.tryInitializePayment = initializePaymentElements;
-
-    // Test function for debugging
-    window.testEndpoint = async function() {
-        const statusElement = document.getElementById('stripe-status');
-        if (statusElement) statusElement.textContent = 'Testing connection...';
+    // Check if fields are already filled on page load
+    setTimeout(() => {
+        const allFieldsFilled = formFields.every(id => {
+            const field = document.getElementById(id);
+            return field && field.value.trim() !== '';
+        });
         
-        try {
-            const response = await fetch('test-endpoint.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({ test: true, timestamp: Date.now() }),
-            });
-            
-            console.log('Test response status:', response.status);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.log('Test error response:', errorText);
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            console.log('Test response:', result);
-            
-            if (statusElement) statusElement.textContent = '✅ Connection test successful!';
-            showMessage('Connection test successful! Server responded: ' + result.message, 'info');
-            
-        } catch (error) {
-            console.error('Test endpoint error:', error);
-            if (statusElement) statusElement.textContent = '❌ Connection test failed';
-            showMessage('Connection test failed: ' + error.message, 'error');
+        if (allFieldsFilled) {
+            initializePaymentElements();
         }
-    };
-
-    // Debug session function
-    window.debugSession = async function() {
-        const statusElement = document.getElementById('stripe-status');
-        if (statusElement) statusElement.textContent = 'Debugging session...';
-        
-        try {
-            const response = await fetch('debug-session.php', {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            console.log('Debug response status:', response.status);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.log('Debug error response:', errorText);
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            console.log('Debug session response:', result);
-            
-            if (statusElement) statusElement.textContent = '✅ Session debug complete!';
-            showMessage('Session debug: Plan = ' + result.plan_from_get + ', Current URL = ' + result.current_url, 'info');
-            
-        } catch (error) {
-            console.error('Debug session error:', error);
-            if (statusElement) statusElement.textContent = '❌ Session debug failed';
-            showMessage('Session debug failed: ' + error.message, 'error');
-        }
-    };
+    }, 100);
 
     // Handle form submission
     const form = document.getElementById('payment-form');
@@ -584,14 +482,10 @@ async function handleSubmit(event, stripe) {
             return;
         }
         
-        console.log('Confirming payment with existing client secret...');
-        
         // If we have a coupon, we might need to create a new payment intent
         let clientSecret = window.currentClientSecret;
         
         if (couponCode) {
-            console.log('Applying coupon and creating new payment intent...');
-            
             const requestData = {
                 plan: <?php echo json_encode($plan); ?>,
                 coupon: couponCode,
@@ -599,8 +493,6 @@ async function handleSubmit(event, stripe) {
                 full_name: fullNameInput.value.trim(),
                 postcode: postcodeInput.value.trim()
             };
-            
-            console.log('Sending coupon payment intent request:', requestData);
             
             const response = await fetch('create-payment-intent.php', {
                 method: 'POST',
@@ -612,16 +504,12 @@ async function handleSubmit(event, stripe) {
                 body: JSON.stringify(requestData),
             });
             
-            console.log('Coupon response status:', response.status);
-            
             if (!response.ok) {
                 const errorText = await response.text();
-                console.log('Coupon error response:', errorText);
                 throw new Error(`HTTP error! status: ${response.status} - ${errorText.substring(0, 100)}`);
             }
             
             const result = await response.json();
-            console.log('Payment intent with coupon result:', result);
             
             if (result.error) {
                 showMessage(result.error, 'error');
@@ -640,8 +528,6 @@ async function handleSubmit(event, stripe) {
             }
         }
         
-        console.log('Confirming payment...');
-        
         // Get the elements from window (they should be available globally)
         const elements = window.currentElements;
         if (!elements) {
@@ -651,7 +537,6 @@ async function handleSubmit(event, stripe) {
         
         // Check payment type to determine which confirmation method to use
         const paymentType = window.currentPaymentType || 'payment';
-        console.log('Payment type:', paymentType);
         
         if (paymentType === 'setup') {
             // Use confirmSetup for setup intents (subscriptions)
@@ -664,7 +549,6 @@ async function handleSubmit(event, stripe) {
             });
             
             if (stripeError) {
-                console.error('Stripe setup error:', stripeError);
                 showMessage(stripeError.message, 'error');
             }
         } else {
@@ -679,12 +563,10 @@ async function handleSubmit(event, stripe) {
             });
             
             if (stripeError) {
-                console.error('Stripe payment error:', stripeError);
                 showMessage(stripeError.message, 'error');
             }
         }
     } catch (error) {
-        console.error('Payment error:', error);
         showMessage('An unexpected error occurred. Please try again.', 'error');
     } finally {
         // Re-enable submit button
@@ -708,8 +590,6 @@ async function applyCoupon() {
     couponMessage.innerHTML = `<span class="text-gray-400">⏳ Validating coupon...</span>`;
     
     try {
-        console.log('Validating coupon:', code);
-        
         const response = await fetch('validate-coupon.php', {
             method: 'POST',
             headers: {
@@ -720,16 +600,12 @@ async function applyCoupon() {
             body: JSON.stringify({ coupon: code }),
         });
         
-        console.log('Coupon validation response status:', response.status);
-        
         if (!response.ok) {
             const errorText = await response.text();
-            console.log('Coupon validation error response:', errorText);
             throw new Error(`HTTP error! status: ${response.status} - ${errorText.substring(0, 100)}`);
         }
         
         const result = await response.json();
-        console.log('Coupon validation result:', result);
         
         if (result.valid) {
             couponCode = code;
@@ -739,7 +615,6 @@ async function applyCoupon() {
             couponMessage.innerHTML = `<span class="text-red-400">✗ ${result.error || 'Invalid coupon code'}</span>`;
         }
     } catch (error) {
-        console.error('Coupon validation error:', error);
         couponCode = null;
         couponMessage.innerHTML = `<span class="text-red-400">✗ Error validating coupon</span>`;
     }
