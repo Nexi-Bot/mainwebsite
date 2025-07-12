@@ -208,6 +208,9 @@ require_once '../includes/header.php';
                             <button type="button" onclick="tryInitializePayment()" class="ml-2 px-2 py-1 bg-blue-600 text-white text-xs rounded">
                                 Load Payment Form
                             </button>
+                            <button type="button" onclick="testEndpoint()" class="ml-2 px-2 py-1 bg-green-600 text-white text-xs rounded">
+                                Test Connection
+                            </button>
                         </div>
                         
                         <div id="payment-element" class="min-h-[60px] p-4 bg-gray-800 border border-gray-700 rounded-lg">
@@ -310,21 +313,32 @@ document.addEventListener('DOMContentLoaded', function() {
             if (statusElement) statusElement.textContent = 'Creating payment session...';
             
             // Create payment intent with customer details
+            const requestData = {
+                plan: '<?php echo $plan; ?>',
+                email: emailInput.value.trim(),
+                full_name: fullNameInput.value.trim(),
+                postcode: postcodeInput.value.trim()
+            };
+            
+            console.log('Sending payment intent request:', requestData);
+            
             const response = await fetch('create-payment-intent.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({
-                    plan: '<?php echo $plan; ?>',
-                    email: emailInput.value.trim(),
-                    full_name: fullNameInput.value.trim(),
-                    postcode: postcodeInput.value.trim()
-                }),
+                body: JSON.stringify(requestData),
             });
             
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                // Try to get the response text for better error debugging
+                const errorText = await response.text();
+                console.log('Error response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText.substring(0, 100)}`);
             }
             
             const result = await response.json();
@@ -424,6 +438,42 @@ document.addEventListener('DOMContentLoaded', function() {
     // Make initialization function globally available
     window.tryInitializePayment = initializePaymentElements;
 
+    // Test function for debugging
+    window.testEndpoint = async function() {
+        const statusElement = document.getElementById('stripe-status');
+        if (statusElement) statusElement.textContent = 'Testing connection...';
+        
+        try {
+            const response = await fetch('test-endpoint.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ test: true, timestamp: Date.now() }),
+            });
+            
+            console.log('Test response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.log('Test error response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            console.log('Test response:', result);
+            
+            if (statusElement) statusElement.textContent = '✅ Connection test successful!';
+            showMessage('Connection test successful! Server responded: ' + result.message, 'info');
+            
+        } catch (error) {
+            console.error('Test endpoint error:', error);
+            if (statusElement) statusElement.textContent = '❌ Connection test failed';
+            showMessage('Connection test failed: ' + error.message, 'error');
+        }
+    };
+
     // Handle form submission
     const form = document.getElementById('payment-form');
     if (form) {
@@ -499,22 +549,31 @@ async function handleSubmit(event, stripe) {
         if (couponCode) {
             console.log('Applying coupon and creating new payment intent...');
             
+            const requestData = {
+                plan: '<?php echo $plan; ?>',
+                coupon: couponCode,
+                email: emailInput.value.trim(),
+                full_name: fullNameInput.value.trim(),
+                postcode: postcodeInput.value.trim()
+            };
+            
+            console.log('Sending coupon payment intent request:', requestData);
+            
             const response = await fetch('create-payment-intent.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({
-                    plan: '<?php echo $plan; ?>',
-                    coupon: couponCode,
-                    email: emailInput.value.trim(),
-                    full_name: fullNameInput.value.trim(),
-                    postcode: postcodeInput.value.trim()
-                }),
+                body: JSON.stringify(requestData),
             });
             
+            console.log('Coupon response status:', response.status);
+            
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                console.log('Coupon error response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText.substring(0, 100)}`);
             }
             
             const result = await response.json();
@@ -587,6 +646,7 @@ async function applyCoupon() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({ coupon: code }),
         });
@@ -594,7 +654,9 @@ async function applyCoupon() {
         console.log('Coupon validation response status:', response.status);
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.log('Coupon validation error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText.substring(0, 100)}`);
         }
         
         const result = await response.json();

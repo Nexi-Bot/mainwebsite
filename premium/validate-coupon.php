@@ -2,8 +2,19 @@
 session_start();
 require_once dirname(__DIR__) . '/includes/config.php';
 
-// Set content type to JSON
+// Set security headers
 header('Content-Type: application/json');
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
+
+// Allow requests from the same origin
+if (isset($_SERVER['HTTP_ORIGIN'])) {
+    $origin = $_SERVER['HTTP_ORIGIN'];
+    if (strpos($origin, 'nexibot.uk') !== false || strpos($origin, 'localhost') !== false) {
+        header("Access-Control-Allow-Origin: $origin");
+    }
+}
 
 // Check if user is authenticated
 if (!isset($_SESSION['discord_user'])) {
