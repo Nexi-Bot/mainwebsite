@@ -205,6 +205,9 @@ require_once '../includes/header.php';
                         <!-- Debug info -->
                         <div id="stripe-debug" class="mb-2 p-2 bg-blue-900/20 border border-blue-500/30 rounded text-blue-400 text-xs">
                             Stripe Status: <span id="stripe-status">Initializing...</span>
+                            <button type="button" onclick="tryInitializePayment()" class="ml-2 px-2 py-1 bg-blue-600 text-white text-xs rounded">
+                                Load Payment Form
+                            </button>
                         </div>
                         
                         <div id="payment-element" class="min-h-[60px] p-4 bg-gray-800 border border-gray-700 rounded-lg">
@@ -291,8 +294,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const fullNameInput = document.getElementById('full-name');
         const postcodeInput = document.getElementById('postcode');
         
+        // Check if already initialized
+        if (window.currentElements) {
+            console.log('Payment elements already initialized');
+            if (statusElement) statusElement.textContent = '✅ Payment form ready!';
+            return;
+        }
+        
         // Only initialize if we have basic customer info
         if (!emailInput.value.trim() || !fullNameInput.value.trim() || !postcodeInput.value.trim()) {
+            if (statusElement) statusElement.textContent = '⏳ Fill in all fields to load payment form';
+            showMessage('Please fill in your email, name, and postcode to load the payment form.', 'info');
             return;
         }
         
@@ -401,11 +413,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const field = document.getElementById(fieldId);
         if (field) {
             field.addEventListener('blur', initializePaymentElements);
+            field.addEventListener('input', () => {
+                // Debounced initialization after typing
+                clearTimeout(field.initTimeout);
+                field.initTimeout = setTimeout(initializePaymentElements, 1000);
+            });
         }
     });
     
     // Also try to initialize immediately if fields are already filled
     setTimeout(initializePaymentElements, 500);
+
+    // Make initialization function globally available
+    window.tryInitializePayment = initializePaymentElements;
 
     // Handle form submission
     const form = document.getElementById('payment-form');
