@@ -251,29 +251,39 @@ try {
 
         $subscription = \Stripe\Subscription::create($subscription_data);
 
-        // Check if we have a payment intent
-        if ($subscription->latest_invoice && $subscription->latest_invoice->payment_intent) {
+        // Check if we have a payment intent from the invoice
+        if ($subscription->latest_invoice && 
+            $subscription->latest_invoice->payment_intent && 
+            $subscription->latest_invoice->payment_intent->client_secret) {
             echo json_encode([
                 'clientSecret' => $subscription->latest_invoice->payment_intent->client_secret,
                 'subscriptionId' => $subscription->id,
-                'type' => 'subscription'
+                'type' => 'payment'  // Changed from 'subscription' to 'payment'
             ]);
         } else {
-            // If no payment intent, create a setup intent for future payments
-            $setup_intent = \Stripe\SetupIntent::create([
+            // If there's an issue with the payment intent, let's create a direct payment intent
+            // for the subscription amount and link it properly
+            $payment_intent = \Stripe\PaymentIntent::create([
+                'amount' => $selected_plan['presale_amount'],
+                'currency' => $selected_plan['currency'],
                 'customer' => $customer->id,
-                'usage' => 'off_session',
+                'description' => "Nexi Premium {$plan} - First Payment",
+                'receipt_email' => $email,
+                'setup_future_usage' => 'off_session',
                 'metadata' => [
-                    'subscription_id' => $subscription->id,
                     'discord_user_id' => $user['id'],
-                    'premium_type' => $plan
+                    'discord_username' => $user['username'],
+                    'premium_type' => $plan,
+                    'subscription_id' => $subscription->id,
+                    'customer_name' => $full_name,
+                    'postcode' => $postcode
                 ]
             ]);
             
             echo json_encode([
-                'clientSecret' => $setup_intent->client_secret,
+                'clientSecret' => $payment_intent->client_secret,
                 'subscriptionId' => $subscription->id,
-                'type' => 'setup'
+                'type' => 'payment'
             ]);
         }
     }
