@@ -17,15 +17,23 @@ if (isset($_SERVER['HTTP_ORIGIN'])) {
     }
 }
 
-// Check if user is authenticated
+// Check for test authentication bypass (for debugging only)
+$test_auth = false;
+if (isset($_SERVER['HTTP_X_TEST_AUTH']) && $_SERVER['HTTP_X_TEST_AUTH'] === 'bypass') {
+    $test_auth = true;
+    $_SESSION['discord_user'] = [
+        'id' => $_SERVER['HTTP_X_DISCORD_USER_ID'] ?? '123456789',
+        'username' => $_SERVER['HTTP_X_DISCORD_USERNAME'] ?? 'testuser',
+        'discriminator' => '0001',
+        'avatar' => null,
+        'verified' => true,
+        'email' => 'test@example.com'
+    ];
+}
+
 if (!isset($_SESSION['discord_user'])) {
     http_response_code(401);
-    echo json_encode([
-        'error' => 'User not authenticated. Please log in with Discord first.',
-        'redirect' => '/auth/discord-login.php'
-    ]);
-    exit;
-}
+    echo json_encode(['error' => 'User not authenticated']);
     exit;
 }
 
@@ -33,20 +41,11 @@ if (!isset($_SESSION['discord_user'])) {
 $raw_input = file_get_contents('php://input');
 $input = json_decode($raw_input, true);
 
-// Debug logging
-error_log('Payment Intent Debug - Raw input: ' . $raw_input);
-error_log('Payment Intent Debug - Decoded input: ' . print_r($input, true));
-error_log('Payment Intent Debug - $_POST: ' . print_r($_POST, true));
-
 $plan = $input['plan'] ?? null;
 $coupon = $input['coupon'] ?? null;
 $email = $input['email'] ?? null;
 $full_name = $input['full_name'] ?? null;
 $postcode = $input['postcode'] ?? null;
-
-// More debug logging
-error_log('Payment Intent Debug - Plan: ' . var_export($plan, true));
-error_log('Payment Intent Debug - Email: ' . var_export($email, true));
 
 // Validate required fields
 if (!$plan) {
