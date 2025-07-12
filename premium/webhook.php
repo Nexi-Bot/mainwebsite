@@ -6,14 +6,38 @@ require_once dirname(__DIR__) . '/includes/database.php';
 header('Content-Type: application/json');
 ob_start();
 
+// Check if this is a POST request (webhooks are always POST)
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['error' => 'Method not allowed. Webhooks must be POST requests.']);
+    exit;
+}
+
 try {
     // Initialize Stripe
     require_once dirname(__DIR__) . '/vendor/autoload.php';
     \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
 
+    // Initialize database connection
+    $db = new Database();
+
     // Get webhook payload
     $payload = file_get_contents('php://input');
     $sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
+    
+    // Check if we have the required signature header
+    if (!$sig_header) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Missing Stripe signature header']);
+        exit;
+    }
+    
+    // Check if we have payload
+    if (!$payload) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Missing payload']);
+        exit;
+    }
     
     // You'll need to set this in your Stripe webhook settings in the Stripe Dashboard
     $endpoint_secret = STRIPE_WEBHOOK_SECRET; // Now using config constant

@@ -5,7 +5,7 @@ require_once '../includes/database.php';
 
 // Check if user is authenticated
 if (!isset($_SESSION['discord_user'])) {
-    header('Location: /premium/error?type=auth_required');
+    header('Location: error.php?type=auth_required');
     exit;
 }
 
@@ -14,7 +14,7 @@ $plan = $_GET['plan'] ?? 'monthly';
 
 // Validate plan
 if (!in_array($plan, ['monthly', 'yearly', 'lifetime'])) {
-    header('Location: /premium/error?type=invalid_plan');
+    header('Location: error.php?type=invalid_plan');
     exit;
 }
 
@@ -257,9 +257,6 @@ require_once '../includes/header.php';
 <!-- Stripe JS -->
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-<!-- Stripe JS -->
-<script src="https://js.stripe.com/v3/"></script>
-<script>
 console.log('Starting Stripe initialization...');
 
 // Wait for DOM to be ready
@@ -313,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (statusElement) statusElement.textContent = 'Creating payment session...';
             
             // Create payment intent with customer details
-            const response = await fetch('/premium/create-payment-intent', {
+            const response = await fetch('create-payment-intent.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -502,7 +499,7 @@ async function handleSubmit(event, stripe) {
         if (couponCode) {
             console.log('Applying coupon and creating new payment intent...');
             
-            const response = await fetch('/premium/create-payment-intent', {
+            const response = await fetch('create-payment-intent.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -550,7 +547,7 @@ async function handleSubmit(event, stripe) {
             elements,
             clientSecret: clientSecret,
             confirmParams: {
-                return_url: `${window.location.origin}/premium/success`,
+                return_url: `${window.location.origin}/premium/success.php`,
                 receipt_email: emailInput.value.trim(),
             },
         });
@@ -586,7 +583,7 @@ async function applyCoupon() {
     try {
         console.log('Validating coupon:', code);
         
-        const response = await fetch('/premium/validate-coupon', {
+        const response = await fetch('validate-coupon.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
