@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once dirname(__DIR__) . '/includes/session.php';
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/database.php';
 
@@ -18,9 +18,18 @@ if (isset($_SERVER['HTTP_ORIGIN'])) {
 }
 
 // Check if user is authenticated
+error_log('Payment Intent Auth Debug - Session ID: ' . session_id());
+error_log('Payment Intent Auth Debug - Session data: ' . print_r($_SESSION, true));
+error_log('Payment Intent Auth Debug - Discord user isset: ' . (isset($_SESSION['discord_user']) ? 'true' : 'false'));
+
 if (!isset($_SESSION['discord_user'])) {
     http_response_code(401);
-    echo json_encode(['error' => 'User not authenticated']);
+    echo json_encode([
+        'error' => 'User not authenticated',
+        'debug_session_id' => session_id(),
+        'debug_session_data' => $_SESSION,
+        'debug_cookies' => $_COOKIE
+    ]);
     exit;
 }
 

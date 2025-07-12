@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Session & Payment Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a1a; color: white; }
+        .button { padding: 10px 20px; margin: 10px; background: #007cba; color: white; text-decoration: none; border-radius: 5px; display: inline-block; }
+        .button:hover { background: #005a87; }
+        .debug { background: #333; padding: 15px; margin: 10px 0; border-radius: 5px; font-family: monospace; }
+        .error { color: #ff6b6b; }
+        .success { color: #51cf66; }
+    </style>
+</head>
+<body>
+    <h1>Payment Debug Console</h1>
+    
+    <h2>Step 1: Authenticate Session</h2>
+    <a href="create-test-session.php" class="button">Create Test Session</a>
+    <a href="browser-debug.php?plan=yearly" class="button">Check Session Status</a>
+    
+    <h2>Step 2: Test Checkout Pages</h2>
+    <a href="checkout.php?plan=monthly" class="button">Monthly Checkout</a>
+    <a href="checkout.php?plan=yearly" class="button">Yearly Checkout</a>
+    <a href="checkout.php?plan=lifetime" class="button">Lifetime Checkout</a>
+    
+    <h2>Step 3: Test Endpoints</h2>
+    <button onclick="testEndpoint()" class="button">Test Payment Intent</button>
+    <button onclick="testDebug()" class="button">Debug Current State</button>
+    
+    <div id="results" class="debug"></div>
+
+    <script>
+        async function testEndpoint() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<span class="success">Testing payment intent endpoint...</span>';
+            
+            try {
+                const response = await fetch('create-payment-intent.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        plan: 'yearly',
+                        email: 'test@browser.com',
+                        full_name: 'Browser Test',
+                        postcode: 'BR123'
+                    })
+                });
+                
+                const result = await response.text();
+                
+                if (response.ok) {
+                    results.innerHTML = '<span class="success">✅ Payment Intent Success:</span><br>' + result;
+                } else {
+                    results.innerHTML = '<span class="error">❌ Payment Intent Error (' + response.status + '):</span><br>' + result;
+                }
+            } catch (error) {
+                results.innerHTML = '<span class="error">❌ Network Error:</span><br>' + error.message;
+            }
+        }
+        
+        async function testDebug() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<span class="success">Getting debug info...</span>';
+            
+            try {
+                const response = await fetch('browser-debug.php?plan=yearly');
+                const result = await response.json();
+                
+                results.innerHTML = '<span class="success">✅ Debug Info:</span><br>' + JSON.stringify(result, null, 2);
+            } catch (error) {
+                results.innerHTML = '<span class="error">❌ Debug Error:</span><br>' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once '../includes/session.php';
 require_once '../includes/config.php';
 require_once '../includes/database.php';
 
@@ -336,6 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify(requestData),
             });
             
@@ -607,6 +608,7 @@ async function handleSubmit(event, stripe) {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify(requestData),
             });
             
@@ -714,6 +716,7 @@ async function applyCoupon() {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
+            credentials: 'same-origin',
             body: JSON.stringify({ coupon: code }),
         });
         
