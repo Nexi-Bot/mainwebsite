@@ -1,6 +1,6 @@
 <?php
-require_once '../includes/config.php';
-require_once '../includes/database.php';
+require_once dirname(__DIR__) . '/includes/config.php';
+require_once dirname(__DIR__) . '/includes/database.php';
 
 // Set content type and disable output buffering
 header('Content-Type: application/json');
@@ -8,7 +8,7 @@ ob_start();
 
 try {
     // Initialize Stripe
-    require_once '../vendor/autoload.php';
+    require_once dirname(__DIR__) . '/vendor/autoload.php';
     \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
 
     // Get webhook payload

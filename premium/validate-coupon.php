@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../includes/config.php';
+require_once dirname(__DIR__) . '/includes/config.php';
 
 // Set content type to JSON
 header('Content-Type: application/json');
@@ -24,7 +24,7 @@ if (!$coupon_code) {
 
 try {
     // Initialize Stripe
-    require_once '../vendor/autoload.php';
+    require_once dirname(__DIR__) . '/vendor/autoload.php';
     \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
 
     // Validate coupon with Stripe

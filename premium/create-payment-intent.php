@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once '../includes/config.php';
-require_once '../includes/database.php';
+require_once dirname(__DIR__) . '/includes/config.php';
+require_once dirname(__DIR__) . '/includes/database.php';
 
 // Set content type to JSON
 header('Content-Type: application/json');
@@ -83,7 +83,7 @@ $user = $_SESSION['discord_user'];
 
 try {
     // Initialize Stripe
-    require_once '../vendor/autoload.php';
+    require_once dirname(__DIR__) . '/vendor/autoload.php';
     \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
 
     if ($plan === 'lifetime') {
