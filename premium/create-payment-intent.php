@@ -25,10 +25,11 @@ if (!isset($_SESSION['discord_user'])) {
 }
 
 // Get request data
-$input = json_decode(file_get_contents('php://input'), true);
+$raw_input = file_get_contents('php://input');
+$input = json_decode($raw_input, true);
 
 // Debug logging
-error_log('Payment Intent Debug - Raw input: ' . file_get_contents('php://input'));
+error_log('Payment Intent Debug - Raw input: ' . $raw_input);
 error_log('Payment Intent Debug - Decoded input: ' . print_r($input, true));
 error_log('Payment Intent Debug - $_POST: ' . print_r($_POST, true));
 
@@ -239,13 +240,38 @@ try {
             }
         }
 
+        // For subscriptions, we need to create them with payment_behavior = 'default_incomplete'
+        // This creates a subscription with an invoice that requires payment
+        $subscription_data['payment_behavior'] = 'default_incomplete';
+        $subscription_data['expand'] = ['latest_invoice.payment_intent'];
+
         $subscription = \Stripe\Subscription::create($subscription_data);
 
-        echo json_encode([
-            'clientSecret' => $subscription->latest_invoice->payment_intent->client_secret,
-            'subscriptionId' => $subscription->id,
-            'type' => 'subscription'
-        ]);
+        // Check if we have a payment intent
+        if ($subscription->latest_invoice && $subscription->latest_invoice->payment_intent) {
+            echo json_encode([
+                'clientSecret' => $subscription->latest_invoice->payment_intent->client_secret,
+                'subscriptionId' => $subscription->id,
+                'type' => 'subscription'
+            ]);
+        } else {
+            // If no payment intent, create a setup intent for future payments
+            $setup_intent = \Stripe\SetupIntent::create([
+                'customer' => $customer->id,
+                'usage' => 'off_session',
+                'metadata' => [
+                    'subscription_id' => $subscription->id,
+                    'discord_user_id' => $user['id'],
+                    'premium_type' => $plan
+                ]
+            ]);
+            
+            echo json_encode([
+                'clientSecret' => $setup_intent->client_secret,
+                'subscriptionId' => $subscription->id,
+                'type' => 'setup'
+            ]);
+        }
     }
 
 } catch (Exception $e) {

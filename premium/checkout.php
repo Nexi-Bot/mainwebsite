@@ -204,7 +204,8 @@ require_once '../includes/header.php';
                         
                         <!-- Debug info -->
                         <div id="stripe-debug" class="mb-2 p-2 bg-blue-900/20 border border-blue-500/30 rounded text-blue-400 text-xs">
-                            Stripe Status: <span id="stripe-status">Initializing...</span>
+                            Stripe Status: <span id="stripe-status">Initializing...</span><br>
+                            <strong>Debug Info:</strong> Plan = "<?php echo htmlspecialchars($plan); ?>", URL = "<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'unknown'); ?>"<br>
                             <button type="button" onclick="tryInitializePayment()" class="ml-2 px-2 py-1 bg-blue-600 text-white text-xs rounded">
                                 Load Payment Form
                             </button>
@@ -324,6 +325,8 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             
             console.log('Plan from PHP:', <?php echo json_encode($plan); ?>);
+            console.log('PHP plan variable debug:', '<?php echo addslashes($plan); ?>');
+            console.log('GET params debug:', <?php echo json_encode($_GET); ?>);
             console.log('Sending payment intent request:', requestData);
             console.log('JSON stringified:', JSON.stringify(requestData));
             
@@ -629,6 +632,10 @@ async function handleSubmit(event, stripe) {
             }
             
             clientSecret = result.clientSecret;
+            // Update the payment type if it changed due to coupon
+            if (result.type) {
+                window.currentPaymentType = result.type;
+            }
         }
         
         console.log('Confirming payment...');
@@ -640,19 +647,39 @@ async function handleSubmit(event, stripe) {
             return;
         }
         
-        // Confirm payment
-        const { error: stripeError } = await stripe.confirmPayment({
-            elements,
-            clientSecret: clientSecret,
-            confirmParams: {
-                return_url: `${window.location.origin}/premium/success.php`,
-                receipt_email: emailInput.value.trim(),
-            },
-        });
+        // Check payment type to determine which confirmation method to use
+        const paymentType = window.currentPaymentType || 'payment';
+        console.log('Payment type:', paymentType);
         
-        if (stripeError) {
-            console.error('Stripe error:', stripeError);
-            showMessage(stripeError.message, 'error');
+        if (paymentType === 'setup') {
+            // Use confirmSetup for setup intents (subscriptions)
+            const { error: stripeError } = await stripe.confirmSetup({
+                elements,
+                clientSecret: clientSecret,
+                confirmParams: {
+                    return_url: `${window.location.origin}/premium/success.php`,
+                },
+            });
+            
+            if (stripeError) {
+                console.error('Stripe setup error:', stripeError);
+                showMessage(stripeError.message, 'error');
+            }
+        } else {
+            // Use confirmPayment for payment intents (lifetime/one-time payments)
+            const { error: stripeError } = await stripe.confirmPayment({
+                elements,
+                clientSecret: clientSecret,
+                confirmParams: {
+                    return_url: `${window.location.origin}/premium/success.php`,
+                    receipt_email: emailInput.value.trim(),
+                },
+            });
+            
+            if (stripeError) {
+                console.error('Stripe payment error:', stripeError);
+                showMessage(stripeError.message, 'error');
+            }
         }
     } catch (error) {
         console.error('Payment error:', error);
