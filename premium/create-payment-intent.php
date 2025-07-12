@@ -26,11 +26,21 @@ if (!isset($_SESSION['discord_user'])) {
 
 // Get request data
 $input = json_decode(file_get_contents('php://input'), true);
+
+// Debug logging
+error_log('Payment Intent Debug - Raw input: ' . file_get_contents('php://input'));
+error_log('Payment Intent Debug - Decoded input: ' . print_r($input, true));
+error_log('Payment Intent Debug - $_POST: ' . print_r($_POST, true));
+
 $plan = $input['plan'] ?? null;
 $coupon = $input['coupon'] ?? null;
 $email = $input['email'] ?? null;
 $full_name = $input['full_name'] ?? null;
 $postcode = $input['postcode'] ?? null;
+
+// More debug logging
+error_log('Payment Intent Debug - Plan: ' . var_export($plan, true));
+error_log('Payment Intent Debug - Email: ' . var_export($email, true));
 
 // Validate required fields
 if (!$plan) {

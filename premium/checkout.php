@@ -211,6 +211,9 @@ require_once '../includes/header.php';
                             <button type="button" onclick="testEndpoint()" class="ml-2 px-2 py-1 bg-green-600 text-white text-xs rounded">
                                 Test Connection
                             </button>
+                            <button type="button" onclick="debugSession()" class="ml-2 px-2 py-1 bg-purple-600 text-white text-xs rounded">
+                                Debug Session
+                            </button>
                         </div>
                         
                         <div id="payment-element" class="min-h-[60px] p-4 bg-gray-800 border border-gray-700 rounded-lg">
@@ -320,7 +323,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 postcode: postcodeInput.value.trim()
             };
             
+            console.log('Plan from PHP:', <?php echo json_encode($plan); ?>);
             console.log('Sending payment intent request:', requestData);
+            console.log('JSON stringified:', JSON.stringify(requestData));
             
             const response = await fetch('create-payment-intent.php', {
                 method: 'POST',
@@ -471,6 +476,40 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Test endpoint error:', error);
             if (statusElement) statusElement.textContent = '❌ Connection test failed';
             showMessage('Connection test failed: ' + error.message, 'error');
+        }
+    };
+
+    // Debug session function
+    window.debugSession = async function() {
+        const statusElement = document.getElementById('stripe-status');
+        if (statusElement) statusElement.textContent = 'Debugging session...';
+        
+        try {
+            const response = await fetch('debug-session.php', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            console.log('Debug response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.log('Debug error response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            console.log('Debug session response:', result);
+            
+            if (statusElement) statusElement.textContent = '✅ Session debug complete!';
+            showMessage('Session debug: Plan = ' + result.plan_from_get + ', Current URL = ' + result.current_url, 'info');
+            
+        } catch (error) {
+            console.error('Debug session error:', error);
+            if (statusElement) statusElement.textContent = '❌ Session debug failed';
+            showMessage('Session debug failed: ' + error.message, 'error');
         }
     };
 
